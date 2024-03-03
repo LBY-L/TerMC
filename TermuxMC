@@ -1,0 +1,275 @@
+#!/bin/python3
+# pip3 install yaspin inquirer
+import os, time, inquirer
+from yaspin import yaspin
+import urllib.request
+from yaspin.spinners import Spinners
+from json import loads
+import readline
+
+@yaspin(Spinners.growHorizontal, "[ Getting Versions ]")
+def GetVanilla():
+    versions_raw = urllib.request.urlopen("https://launchermeta.mojang.com/mc/game/version_manifest.json").read()
+    versions = loads(versions_raw)["versions"]
+    
+    versions_dict = {}
+
+    for version_info in filter(lambda x: x["type"] == "release", versions):
+        download = urllib.request.urlopen(version_info["url"]).read()
+        url = loads(download)["downloads"]["server"]["url"]
+        release = version_info["id"] 
+        versions_dict[release] = url
+        if release == "1.2.5": # The servers are good until this versions
+            break
+    return versions_dict
+
+@yaspin(Spinners.growHorizontal, "[ Getting Versions ]")
+def GetFabricVer():
+    versions_raw = urllib.request.urlopen("https://meta.fabricmc.net/v2/versions").read()
+    versions = loads(versions_raw)["game"]
+    listVer = []
+
+    for version_info in filter(lambda x: x["stable"] == True, versions):
+        listVer.append(version_info["version"])
+    return listVer
+
+@yaspin(Spinners.growHorizontal, "[ Getting Available Loaders ]")
+def GetFabricLoader(ver):
+    loader_raw = urllib.request.urlopen(f"https://meta.fabricmc.net/v2/versions/loader/{ver}").read()
+    loaders = loads(loader_raw)
+    loadersList = []
+    for loader_ver_raw in loaders:
+        loader_ver = loader_ver_raw["loader"]["version"]
+        loadersList.append(loader_ver)
+        if loader_ver == "0.12.0":
+            break
+    return loadersList
+
+@yaspin(Spinners.growHorizontal, "[ Getting Versions ]")
+def GetPaperVer():
+    versions_raw = urllib.request.urlopen("https://api.papermc.io/v2/projects/paper/").read()
+    versions = loads(versions_raw)["versions"]
+    listVer = []
+
+    for version_info in versions:
+        if version_info != "1.13-pre7":
+            listVer.append(version_info)
+    return list(reversed(listVer))
+
+@yaspin(Spinners.growHorizontal, "[ Getting Available Builds ]")
+def GetPaperBuild(ver):
+    build_raw = urllib.request.urlopen(f"https://api.papermc.io/v2/projects/paper/versions/{ver}/builds/").read()
+    builds = loads(build_raw)["builds"]
+    buildsList = []
+    for build_ver_raw in list(reversed(builds)):
+        buildsList.append(build_ver_raw["build"])
+    return buildsList
+
+def Setup():
+    with yaspin(Spinners.earth, text="[ Updating repos ]") as sp:
+        os.system("pkg update -y 1> /dev/null 2> /dev/null")
+    
+    with yaspin(Spinners.moon, text="[ Installing dependences ]") as sp:
+        os.system("pkg install -y openjdk-17 wget 1> /dev/null 2> /dev/null")
+
+def Ram():
+    ram = os.popen("free -h | awk '/^Mem:/{print $2}'").readlines()[0].strip()[:-2]
+    ramAllocation = []
+    for i in range(1, round(float(ram))+1):
+        ramAllocation.append(f"{i}G")
+        
+    questions = [
+    
+      inquirer.List("Ram",
+                    message="How many GB of ram you'll use?",
+                    choices=list(ramAllocation),
+                ),
+    ]    
+
+    answers = inquirer.prompt(questions)
+
+    return answers["Ram"]
+
+def Folder():
+    home = os.environ["HOME"]
+    lines = os.get_terminal_size().lines
+    if not os.path.isdir(f"{home}/MinecraftServers"):
+        os.mkdir(f"{home}/MinecraftServers")
+    def really():
+        answer = input("[\x1b[33m?\x1b[0m] What is the name of the server: ")
+        return answer
+        
+    answer = really()
+
+    if any(c.isspace() for c in answer):
+        print(f"\x1b[s\x1b[{lines};1H\x1b[31mThe server name can't contain spaces\x1b[0m", flush=True, end="")
+        time.sleep(1)
+        print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="") 
+        answer = really()
+        
+    elif "\\" in answer:
+        print(f"\x1b[s\x1b[{lines};1H\x1b[31mThe server name can't contain '\\'\x1b[0m", flush=True, end="")
+        time.sleep(1)
+        print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="") 
+        answer = really()
+        
+    elif "/" in answer:
+        print(f"\x1b[s\x1b[{lines};1H\x1b[31mThe server name can't contain '/'\x1b[0m", flush=True, end="")
+        time.sleep(1)
+        print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="")
+        answer = really()
+        
+    if os.path.isdir(f"{home}/MinecraftServers/" + answer + "/"):
+        print(f"\x1b[s\x1b[{lines};1H\x1b[31mThis server nave alredy exist\x1b[0m", flush=True, end="")
+        time.sleep(1)
+        print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="")
+        answer = really()
+    else:
+        os.mkdir(f"{home}/MinecraftServers/" + answer)
+        
+    return f"{home}/MinecraftServers/" + answer + "/"
+
+def CreateMethod():
+    folder = Folder()
+    ram = Ram()
+    def CreateFolder(jar=""):        
+        with open(folder + "eula.txt", "w") as file:
+            file.write("eula=true")
+        with open(folder + "run.sh", "w") as file:
+            file.write(f"java -Xms{ram} -Xmx{ram} -jar {folder}{jar} --nogui")
+    
+    questions = [
+      inquirer.List("ServerType",
+                    message="What server type you'll use?",
+                    choices=list(["Fabric", "Paper (Broken)", "Vanilla"]),
+                ),
+    ]
+            
+    answers = inquirer.prompt(questions)
+
+    if answers["ServerType"] == "Vanilla":
+        Versions = GetVanilla()
+        questions = [
+          inquirer.List("Versions",
+                        message="What version you want?",
+                        choices=list(Versions.keys()),
+                    ),
+        ]
+        
+        answers = inquirer.prompt(questions)
+
+        with yaspin(text=f"[ Downloading Minecraft {answers['Versions']} ]") as sp:
+            urllib.request.urlretrieve(Versions[answers["Versions"]], folder + "server.jar")
+
+        CreateFolder(jar="server.jar")
+        
+    elif answers["ServerType"] == "Fabric":
+        Versions = GetFabricVer()
+        questions = [
+          inquirer.List("Versions",
+                        message="What version you want?",
+                        choices=Versions,
+                    ),
+        ]
+        
+        ver = inquirer.prompt(questions)
+        Fersion = ver["Versions"]
+        Loader = GetFabricLoader(Fersion)
+        questions = [
+          inquirer.List("Loader",
+                        message="What loader version you'll use?",
+                        choices=Loader,
+                    ),
+        ]
+        
+        foader = inquirer.prompt(questions)
+        Lever = foader["Loader"]
+
+        with yaspin(text=f"[ Downloading Minecraft {Fersion} ]") as sp:
+            urllib.request.urlretrieve(f"https://meta.fabricmc.net/v2/versions/loader/{Fersion}/{Lever}/1.0.0/server/jar", folder + "fabric.jar")
+        CreateFolder(jar="fabric.jar")
+        
+    elif answers["ServerType"] == "Paper (Broken)":
+        Versions = GetPaperVer()
+        questions = [
+          inquirer.List("Versions",
+                        message="What version you want?",
+                        choices=Versions,
+                    ),
+        ]
+        
+        ver = inquirer.prompt(questions)
+        Persion = ver["Versions"]
+        Build = GetPaperBuild(Persion)
+        questions = [
+          inquirer.List("Build",
+                        message="What build version you'll use?",
+                        choices=Build,
+                    ),
+        ]
+        
+        buildver = inquirer.prompt(questions)
+        build = buildver["Build"]
+        with yaspin(text=f"[ Downloading Minecraft {Persion} ]") as sp:
+            download_raw = urllib.request.urlopen(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{build}/").read()
+            download = loads(download_raw)["downloads"]["application"]["name"]
+            urllib.request.urlretrieve(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{build}/downloads/{download}", folder + "paper.jar")
+
+        CreateFolder(jar="paper.jar")
+
+def StartMethod():
+    home = os.environ["HOME"]
+    servers = os.listdir(f"{home}/MinecraftServers")
+    servers.append("Exit")
+    questions = [
+      inquirer.List("Run",
+                    message="Select a server to run",
+                    choices=list(servers),
+                ),
+    ]
+    
+    answers = inquirer.prompt(questions)
+    if answers['Run'] != "Exit":
+        os.chdir(f"{home}/MinecraftServers/{answers['Run']}")
+        os.system("bash run.sh")
+        
+def RemoveMethod():
+    home = os.environ["HOME"]
+    servers = os.listdir(f"{home}/MinecraftServers")
+    servers.append("Exit")
+    questions = [
+      inquirer.List("Run",
+                    message="Select a server to remove",
+                    choices=list(servers),
+                ),
+    ]
+    
+    answers = inquirer.prompt(questions)
+    if answers['Run'] != "Exit":
+        os.system(f"rm -rf '{home}/MinecraftServers/{answers['Run']}'")
+    
+ 
+def Method():
+    questions = [
+      inquirer.List("Method",
+                    message="What do you want to do?",
+                    choices=list(["Create", "Start", "Remove", "Exit"]),
+                ),
+    ]
+    
+    answers = inquirer.prompt(questions)
+    if answers["Method"] == "Create": 
+        CreateMethod()
+        Method()
+    if answers["Method"] == "Start":
+        StartMethod()
+        Method()
+    if answers["Method"] == "Remove":
+        RemoveMethod()
+        Method()
+    if answers["Method"] == "Exit":
+        exit()
+if __name__ == "__main__":
+    if not os.path.isdir(f"{os.environ['HOME']}/MinecraftServers"): 
+        Setup()
+    Method()

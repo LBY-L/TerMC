@@ -1,11 +1,34 @@
 #!/bin/python3
 # pip3 install yaspin inquirer
-import os, time, inquirer
+import os, time, inquirer, readline
 from yaspin import yaspin
 import urllib.request
 from yaspin.spinners import Spinners
 from json import loads
-import readline
+
+def MoziallaUserAgent():
+    opener = urllib.request.build_opener()
+    opener.addheaders = [('User-Agent', 'Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion')]
+    urllib.request.install_opener(opener)
+
+@yaspin(Spinners.growHorizontal, "[ Getting Versions ]")
+def GetMohistVer():
+    MoziallaUserAgent()
+    versions_raw = urllib.request.urlopen("https://mohistmc.com/api/v2/projects/mohist").read()
+    versions = loads(versions_raw)["versions"]
+    urllib.request.urlcleanup()
+    return list(reversed(versions))
+
+@yaspin(Spinners.growHorizontal, "[ Getting Available Builds ]")
+def GetMohistBuild(ver):
+    MoziallaUserAgent()
+    build_raw = urllib.request.urlopen(f"https://mohistmc.com/api/v2/projects/mohist/{ver}/builds").read()
+    builds = loads(build_raw)
+    buildsDict = {}
+    for buildsList in list(reversed(builds["builds"])):
+        buildsDict[buildsList["number"]] = buildsList["url"]
+    urllib.request.urlcleanup()
+    return buildsDict
 
 @yaspin(Spinners.growHorizontal, "[ Getting Versions ]")
 def GetVanilla():
@@ -79,7 +102,6 @@ def Ram():
         ramAllocation.append(f"{i}G")
         
     questions = [
-    
       inquirer.List("Ram",
                     message="How many GB of ram you'll use?",
                     choices=list(ramAllocation),
@@ -89,6 +111,11 @@ def Ram():
     answers = inquirer.prompt(questions)
 
     return answers["Ram"]
+
+def Err(text):
+    print(f"\x1b[s\x1b[{os.get_terminal_size().lines};1H\x1b[31m{text}\x1b[0m", flush=True, end="")
+    time.sleep(1)
+    print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="")
 
 def Folder():
     home = os.environ["HOME"]
@@ -101,33 +128,29 @@ def Folder():
         
     answer = really()
 
-    if any(c.isspace() for c in answer):
-        print(f"\x1b[s\x1b[{lines};1H\x1b[31mThe server name can't contain spaces\x1b[0m", flush=True, end="")
-        time.sleep(1)
-        print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="") 
+    if answer == "":
+        Err("The server name can't be empty")
+        answer = really()
+
+    elif any(c.isspace() for c in answer):
+        Err("The server name can't contain spaces") 
         answer = really()
         
     elif "\\" in answer:
-        print(f"\x1b[s\x1b[{lines};1H\x1b[31mThe server name can't contain '\\'\x1b[0m", flush=True, end="")
-        time.sleep(1)
-        print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="") 
+        Err("The server name can't contain '\\'")
         answer = really()
         
     elif "/" in answer:
-        print(f"\x1b[s\x1b[{lines};1H\x1b[31mThe server name can't contain '/'\x1b[0m", flush=True, end="")
-        time.sleep(1)
-        print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="")
+        Err("The server name can't contain '/'")
         answer = really()
         
-    if os.path.isdir(f"{home}/MinecraftServers/" + answer + "/"):
-        print(f"\x1b[s\x1b[{lines};1H\x1b[31mThis server nave alredy exist\x1b[0m", flush=True, end="")
-        time.sleep(1)
-        print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="")
+    if os.path.isdir(f"{home}/MinecraftServers/{answer}/"):
+        Err("This server nave alredy exists")
         answer = really()
     else:
-        os.mkdir(f"{home}/MinecraftServers/" + answer)
+        os.mkdir(f"{home}/MinecraftServers/{answer}")
         
-    return f"{home}/MinecraftServers/" + answer + "/"
+    return f"{home}/MinecraftServers/{answer}/"
 
 def CreateMethod():
     folder = Folder()
@@ -136,12 +159,12 @@ def CreateMethod():
         with open(folder + "eula.txt", "w") as file:
             file.write("eula=true")
         with open(folder + "run.sh", "w") as file:
-            file.write(f"java -Xms{ram} -Xmx{ram} -jar {folder}{jar} --nogui")
+            file.write(f"java -Xms{ram} -Xmx{ram} -jar {folder}{jar}")
     
     questions = [
       inquirer.List("ServerType",
                     message="What server type you'll use?",
-                    choices=list(["Fabric", "Paper (Broken)", "Vanilla"]),
+                    choices=list(["Fabric", "Paper", "Vanilla", "Mohist"]),
                 ),
     ]
             
@@ -175,6 +198,7 @@ def CreateMethod():
         ver = inquirer.prompt(questions)
         Fersion = ver["Versions"]
         Loader = GetFabricLoader(Fersion)
+
         questions = [
           inquirer.List("Loader",
                         message="What loader version you'll use?",
@@ -187,9 +211,10 @@ def CreateMethod():
 
         with yaspin(text=f"[ Downloading Minecraft {Fersion} ]") as sp:
             urllib.request.urlretrieve(f"https://meta.fabricmc.net/v2/versions/loader/{Fersion}/{Lever}/1.0.0/server/jar", folder + "fabric.jar")
+        
         CreateFolder(jar="fabric.jar")
         
-    elif answers["ServerType"] == "Paper (Broken)":
+    elif answers["ServerType"] == "Paper":
         Versions = GetPaperVer()
         questions = [
           inquirer.List("Versions",
@@ -216,6 +241,32 @@ def CreateMethod():
             urllib.request.urlretrieve(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{build}/downloads/{download}", folder + "paper.jar")
 
         CreateFolder(jar="paper.jar")
+    elif answers["ServerType"] == "Mohist":
+        Versions = GetMohistVer()
+        questions = [
+          inquirer.List("Versions",
+                        message="What version you want?",
+                        choices=Versions,
+                    ),
+        ]
+        
+        ver = inquirer.prompt(questions)
+        Mersion = ver["Versions"]
+        Build = GetMohistBuild(Mersion)
+        questions = [
+          inquirer.List("Build",
+                        message="What build version you'll use?",
+                        choices=list(Build.keys()),
+                    ),
+        ]
+        
+        buildver = inquirer.prompt(questions)
+        with yaspin(text=f"[ Downloading Minecraft {Mersion} ]") as sp:
+            MoziallaUserAgent()
+            urllib.request.urlretrieve(Build[buildver["Build"]], folder + "mohist.jar")
+            urllib.request.urlcleanup()
+        
+        CreateFolder(jar="mohist.jar")
 
 def StartMethod():
     home = os.environ["HOME"]
@@ -247,7 +298,6 @@ def RemoveMethod():
     answers = inquirer.prompt(questions)
     if answers['Run'] != "Exit":
         os.system(f"rm -rf '{home}/MinecraftServers/{answers['Run']}'")
-    
  
 def Method():
     questions = [
@@ -269,6 +319,7 @@ def Method():
         Method()
     if answers["Method"] == "Exit":
         exit()
+
 if __name__ == "__main__":
     if not os.path.isdir(f"{os.environ['HOME']}/MinecraftServers"): 
         Setup()

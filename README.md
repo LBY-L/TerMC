@@ -9,6 +9,6 @@ pkg install python3 python-pip; pip3 install yaspin inquirer
 
 ## Run
 ```bash
-python3 -c "$(wget -qO- https://raw.githubusercontent.com/LBY-L/TermuxMC/main/TermuxMC" 
+python3 -c "$(wget -qO- https://raw.githubusercontent.com/LBY-L/TermuxMC/main/TermuxMC)" 
 ```
 

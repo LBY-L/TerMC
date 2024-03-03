@@ -4,7 +4,7 @@
 
 ## Script dependences
 ```bash
-pkg install python3 python-pip; pip3 install yaspin inquirer
+pkg install python3 python-pip; pip3 install yaspin InquirerPy
 ```
 
 ## Run

@@ -1,6 +1,7 @@
 #!/bin/python3
-# pip3 install yaspin inquirer
-import os, time, inquirer, readline
+# pip3 install yaspin InquirerPy
+import os, time, readline
+from InquirerPy import inquirer
 from yaspin import yaspin
 import urllib.request
 from yaspin.spinners import Spinners
@@ -100,170 +101,111 @@ def Ram():
     ramAllocation = []
     for i in range(1, round(float(ram))+1):
         ramAllocation.append(f"{i}G")
-        
-    questions = [
-      inquirer.List("Ram",
-                    message="How many GB of ram you'll use?",
-                    choices=list(ramAllocation),
-                ),
-    ]    
+    
+    RamSel = inquirer.select(
+        message="How many GB of ram you'll use?",
+        choices=ramAllocation,
+    ).execute()
 
-    answers = inquirer.prompt(questions)
-
-    return answers["Ram"]
-
-def Err(text):
-    print(f"\x1b[s\x1b[{os.get_terminal_size().lines};1H\x1b[31m{text}\x1b[0m", flush=True, end="")
-    time.sleep(1)
-    print("\x1b[2K\x1b[u\x1b[1A\x1b[2K", flush=True, end="")
+    return RamSel
 
 def Folder():
     home = os.environ["HOME"]
-    lines = os.get_terminal_size().lines
+
     if not os.path.isdir(f"{home}/MinecraftServers"):
         os.mkdir(f"{home}/MinecraftServers")
-    def really():
-        answer = input("[\x1b[33m?\x1b[0m] What is the name of the server: ")
-        return answer
+    
+    result = inquirer.text(
+            message="Name:",
+            validate=lambda result: len(result) > 0 and not "/" in result and not "\\" in result and not " " in result and not os.path.isdir(f"{home}/MinecraftServers/{result}/"),
+            invalid_message="Input cannot be empty and can't contain spaces, '/' & '\\', and can't be the same!",
+    ).execute()
         
-    answer = really()
-
-    if answer == "":
-        Err("The server name can't be empty")
-        answer = really()
-
-    elif any(c.isspace() for c in answer):
-        Err("The server name can't contain spaces") 
-        answer = really()
+    os.mkdir(f"{home}/MinecraftServers/{result}")
         
-    elif "\\" in answer:
-        Err("The server name can't contain '\\'")
-        answer = really()
-        
-    elif "/" in answer:
-        Err("The server name can't contain '/'")
-        answer = really()
-        
-    if os.path.isdir(f"{home}/MinecraftServers/{answer}/"):
-        Err("This server nave alredy exists")
-        answer = really()
-    else:
-        os.mkdir(f"{home}/MinecraftServers/{answer}")
-        
-    return f"{home}/MinecraftServers/{answer}/"
+    return f"{home}/MinecraftServers/{result}/"
 
 def CreateMethod():
     folder = Folder()
     ram = Ram()
-    def CreateFolder(jar=""):        
+    def CreateFolder(paper=False, jar=""):        
         with open(folder + "eula.txt", "w") as file:
             file.write("eula=true")
         with open(folder + "run.sh", "w") as file:
-            file.write(f"java -Xms{ram} -Xmx{ram} -jar {folder}{jar}")
-    
-    questions = [
-      inquirer.List("ServerType",
-                    message="What server type you'll use?",
-                    choices=list(["Fabric", "Paper", "Vanilla", "Mohist"]),
-                ),
-    ]
-            
-    answers = inquirer.prompt(questions)
+            if paper:
+                file.write(f"java -Xms{ram} -Xmx{ram} -DPaper.IgnoreJavaVersion=true -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -jar {folder}{jar}")
+            else:
+                file.write(f"java -Xms{ram} -Xmx{ram} -jar {folder}{jar}")
 
-    if answers["ServerType"] == "Vanilla":
+    Server = inquirer.select(
+        message="What server type you'll use?",
+        choices=["Fabric", "Paper", "Vanilla", "Mohist"],
+    ).execute()
+
+    if Server == "Vanilla":
         Versions = GetVanilla()
-        questions = [
-          inquirer.List("Versions",
-                        message="What version you want?",
-                        choices=list(Versions.keys()),
-                    ),
-        ]
+        Version = inquirer.select(
+            message="What version you want?",
+            choices=list(Versions.keys()),
+        ).execute()
         
-        answers = inquirer.prompt(questions)
-
-        with yaspin(text=f"[ Downloading Minecraft {answers['Versions']} ]") as sp:
-            urllib.request.urlretrieve(Versions[answers["Versions"]], folder + "server.jar")
+        with yaspin(text=f"[ Downloading Minecraft {Version} ]") as sp:
+            urllib.request.urlretrieve(Versions[Version], folder + "server.jar")
 
         CreateFolder(jar="server.jar")
         
-    elif answers["ServerType"] == "Fabric":
+    elif Server == "Fabric":
         Versions = GetFabricVer()
-        questions = [
-          inquirer.List("Versions",
-                        message="What version you want?",
-                        choices=Versions,
-                    ),
-        ]
+        Fersion = inquirer.select(
+            message="What version you want?",
+            choices=Versions,
+        ).execute()
         
-        ver = inquirer.prompt(questions)
-        Fersion = ver["Versions"]
         Loader = GetFabricLoader(Fersion)
 
-        questions = [
-          inquirer.List("Loader",
-                        message="What loader version you'll use?",
-                        choices=Loader,
-                    ),
-        ]
-        
-        foader = inquirer.prompt(questions)
-        Lever = foader["Loader"]
+        Foader = inquirer.select(
+            message="What loader version you'll use??",
+            choices=Loader,
+        ).execute()
 
         with yaspin(text=f"[ Downloading Minecraft {Fersion} ]") as sp:
-            urllib.request.urlretrieve(f"https://meta.fabricmc.net/v2/versions/loader/{Fersion}/{Lever}/1.0.0/server/jar", folder + "fabric.jar")
+            urllib.request.urlretrieve(f"https://meta.fabricmc.net/v2/versions/loader/{Fersion}/{Foader}/1.0.0/server/jar", folder + "fabric.jar")
         
         CreateFolder(jar="fabric.jar")
         
-    elif answers["ServerType"] == "Paper":
+    elif Server == "Paper":
         Versions = GetPaperVer()
-        questions = [
-          inquirer.List("Versions",
-                        message="What version you want?",
-                        choices=Versions,
-                    ),
-        ]
-        
-        ver = inquirer.prompt(questions)
-        Persion = ver["Versions"]
-        Build = GetPaperBuild(Persion)
-        questions = [
-          inquirer.List("Build",
-                        message="What build version you'll use?",
-                        choices=Build,
-                    ),
-        ]
-        
-        buildver = inquirer.prompt(questions)
-        build = buildver["Build"]
-        with yaspin(text=f"[ Downloading Minecraft {Persion} ]") as sp:
-            download_raw = urllib.request.urlopen(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{build}/").read()
-            download = loads(download_raw)["downloads"]["application"]["name"]
-            urllib.request.urlretrieve(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{build}/downloads/{download}", folder + "paper.jar")
+        Persion = inquirer.select(
+            message="What version you want?",
+            choices=Versions,
+        ).execute()
+        Builds = GetPaperBuild(Persion)
+        Build = inquirer.select(
+            message="What build version you'll use?",
+            choices=Builds,
+        ).execute()
 
-        CreateFolder(jar="paper.jar")
-    elif answers["ServerType"] == "Mohist":
+        with yaspin(text=f"[ Downloading Minecraft {Persion} ]") as sp:
+            DownloadRaw = urllib.request.urlopen(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{Build}/").read()
+            Download = loads(DownloadRaw)["downloads"]["application"]["name"]
+            urllib.request.urlretrieve(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{Build}/downloads/{Download}", folder + "paper.jar")
+
+        CreateFolder(paper=True, jar="paper.jar")
+    elif Server == "Mohist":
         Versions = GetMohistVer()
-        questions = [
-          inquirer.List("Versions",
-                        message="What version you want?",
-                        choices=Versions,
-                    ),
-        ]
-        
-        ver = inquirer.prompt(questions)
-        Mersion = ver["Versions"]
-        Build = GetMohistBuild(Mersion)
-        questions = [
-          inquirer.List("Build",
-                        message="What build version you'll use?",
-                        choices=list(Build.keys()),
-                    ),
-        ]
-        
-        buildver = inquirer.prompt(questions)
+
+        Mersion = inquirer.select(
+            message="What version you want?",
+            choices=Versions,
+        ).execute()
+        Builds = GetMohistBuild(Mersion)
+        Build = inquirer.select(
+            message="What build version you'll use?",
+            choices=list(Builds.keys()),
+        ).execute()
         with yaspin(text=f"[ Downloading Minecraft {Mersion} ]") as sp:
             MoziallaUserAgent()
-            urllib.request.urlretrieve(Build[buildver["Build"]], folder + "mohist.jar")
+            urllib.request.urlretrieve(Builds[Build], folder + "mohist.jar")
             urllib.request.urlcleanup()
         
         CreateFolder(jar="mohist.jar")
@@ -272,52 +214,46 @@ def StartMethod():
     home = os.environ["HOME"]
     servers = os.listdir(f"{home}/MinecraftServers")
     servers.append("Exit")
-    questions = [
-      inquirer.List("Run",
-                    message="Select a server to run",
-                    choices=list(servers),
-                ),
-    ]
-    
-    answers = inquirer.prompt(questions)
-    if answers['Run'] != "Exit":
-        os.chdir(f"{home}/MinecraftServers/{answers['Run']}")
+    Server = inquirer.select(
+            message="Select a server to run",
+            choices=list(servers),
+    ).execute()
+
+    if Server != "Exit":
+        os.chdir(f"{home}/MinecraftServers/{Server}")
         os.system("bash run.sh")
         
 def RemoveMethod():
     home = os.environ["HOME"]
     servers = os.listdir(f"{home}/MinecraftServers")
-    servers.append("Exit")
-    questions = [
-      inquirer.List("Run",
-                    message="Select a server to remove",
-                    choices=list(servers),
-                ),
-    ]
+    servers.extend(["All", "Exit"])
+    Server = inquirer.select(
+            message="Select a server to remove",
+            choices=list(servers),
+    ).execute()
     
-    answers = inquirer.prompt(questions)
-    if answers['Run'] != "Exit":
-        os.system(f"rm -rf '{home}/MinecraftServers/{answers['Run']}'")
+    if Server != "Exit":
+        os.system(f"rm -rf '{home}/MinecraftServers/{Server}'")
+        if Server == "All":
+            os.system(f"rm -rf '{home}/MinecraftServers/*'")
+
  
 def Method():
-    questions = [
-      inquirer.List("Method",
-                    message="What do you want to do?",
-                    choices=list(["Create", "Start", "Remove", "Exit"]),
-                ),
-    ]
-    
-    answers = inquirer.prompt(questions)
-    if answers["Method"] == "Create": 
+    MethodSel = inquirer.select(
+            message="What do you want to do?",
+            choices=["Create", "Start", "Remove", "Exit"],
+    ).execute()
+
+    if MethodSel == "Create": 
         CreateMethod()
         Method()
-    if answers["Method"] == "Start":
+    if MethodSel == "Start":
         StartMethod()
         Method()
-    if answers["Method"] == "Remove":
+    if MethodSel == "Remove":
         RemoveMethod()
         Method()
-    if answers["Method"] == "Exit":
+    if MethodSel == "Exit":
         exit()
 
 if __name__ == "__main__":

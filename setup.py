@@ -6,7 +6,7 @@ setup(
     version="0.8",
     author="LBY_L",
     license='GNU General Public License 3.0 (GPL 3.0)',
-    description="TerMC a cli dash to install and run minecraft servers 🎇",
+    description="A simple script to download and execute Minecraft servers 🎇",
     entry_points={
         'console_scripts': 'termc = termc.__init__:__main__'
     },

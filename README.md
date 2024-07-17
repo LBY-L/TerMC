@@ -35,7 +35,7 @@
 pip3 install git+https://github.com/LBY-L/TerMC.git
 ```
 
-# Run
+## Run
 ```bash
 python3 -m termc
 ```

@@ -1,2 +1,0 @@
-[console_scripts]
-termc = termc.__init__:__main__

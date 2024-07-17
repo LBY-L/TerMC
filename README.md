@@ -41,6 +41,12 @@ python3 -m termc
 ```
 
 ## Portable Run
+> Bash/Zsh
 > ```bash
-> python3 -c $(https://raw.githubusercontent.com/LBY-L/TerMC/main/termc/termc.py)
+> python3 -c $("https://raw.githubusercontent.com/LBY-L/TerMC/main/termc/termc.py")
+> ```
+
+> Fish
+> ```bash
+> python3 -c ("https://raw.githubusercontent.com/LBY-L/TerMC/main/termc/termc.py")
 > ```

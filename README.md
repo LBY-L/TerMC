@@ -1,15 +1,17 @@
 # TermuxMC
-### A simple script for Termux to download and execute Minecraft Vanilla 🧨 servers and Fabric servers 🎇
+### A simple script to download and execute Minecraft servers 🎇
 
 
 ## Script dependences
+
+> Termux:
 ```bash
-pkg install python3 python-pip; pip3 install yaspin InquirerPy
+pkg install python3 python-pip
 ```
 
 ## Run
 ```bash
-python3 -c "$(wget -qO- https://raw.githubusercontent.com/LBY-L/TermuxMC/main/TermuxMC)" 
+pip3 install (insert here the name o the repo xdddd)
 ```
-> If you use fish execute it in bash
 
+> If you use fish execute it in bash

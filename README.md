@@ -30,7 +30,13 @@
 > sudo pacman -S python python-pip jre21-openjdk-headless bash
 > ```
 
-## Run
+## Install
 ```bash
 pip3 install git+https://github.com/LBY-L/TerMC.git
 ```
+
+# Run
+```bash
+python3 -m termc
+```
+

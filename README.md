@@ -40,3 +40,7 @@ pip3 install git+https://github.com/LBY-L/TerMC.git
 python3 -m termc
 ```
 
+## Portable Run
+> ```bash
+> python3 -c $(https://raw.githubusercontent.com/LBY-L/TerMC/main/termc/termc.py)
+> ```

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="termc",
     python_requires='>=3.10',
-    version="0.8",
+    version="0.8.1",
     author="LBY_L",
     license='GNU General Public License 3.0 (GPL 3.0)',
     description="A simple script to download and execute Minecraft servers 🎇",

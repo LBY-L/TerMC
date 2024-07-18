@@ -39,14 +39,3 @@ pip3 install git+https://github.com/LBY-L/TerMC.git
 ```bash
 python3 -m termc
 ```
-
-## Portable Run
-> Bash/Zsh
-> ```bash
-> python3 -c "$(wget -qO- https://raw.githubusercontent.com/LBY-L/TerMC/main/termc/termc.py)"
-> ```
-
-> Fish
-> ```
-> Run in bash, i tried and is impossible
-> ```

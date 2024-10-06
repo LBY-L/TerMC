@@ -11,7 +11,7 @@ setup(
         'console_scripts': 'termc = termc.__init__:__main__'
     },
     packages=find_packages(),
-    install_requires=['yaspin', 'InquirerPy'],
+    install_requires=['yaspin', 'InquirerPy', 'psutil'],
     keywords=['cli', 'tui']
 )
 # Why i keeping doing this things...

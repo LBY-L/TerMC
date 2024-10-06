@@ -124,7 +124,7 @@ def GetBTAVer():
 
 def Ram():
     ramAllocation = []
-    for ramSymbol in range((RamMemory().total//1000000000)-1):
+    for ramSymbol in range(1, (RamMemory().total//1000000000)-1):
         ramAllocation.append(f"{ramSymbol}G")
 
     RamSelection = inquirer.select(

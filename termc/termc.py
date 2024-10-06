@@ -310,7 +310,12 @@ def RemoveMethod():
 
 def EditMethod():
     EDITOR = shutil.which(os.environ["EDITOR"])
-
+    ComparativeDict = {
+        "ops.json": "ops.txt",
+        "banned-players.json": "banned-players.txt",
+        "banned-ips.json": "banned-ips.txt",
+        "whitelist.json": "white-list.txt"
+    }
     Server = SelectServer("Select a server to edit")
 
     def openWith(FilePath):
@@ -328,21 +333,27 @@ def EditMethod():
                                     Choice(value="server.properties", name="Server Properties"),
                                     Choice(value="run.sh", name="Run Script"),
                                     Choice(value="eula.txt", name="EULA File"),
-                                    Choice(value="ops.txt", name="Ops File"),
+                                    Choice(value="ops.json", name="Ops File"),
                                     "Banned Players/IP Files",
-                                    Choice(value="white-list.txt", name="White List File"),
+                                    Choice(value="whitelist.json", name="White List File"),
                                     Separator(),
                                     Choice(value=None, name="Exit")
                                     ]).execute()
         if Settings:
             if Settings == "Banned Players/IP Files":
                 BannedFile = inquirer.select(message="Select which open",
-                    choices=[Choice(value="banned-players.txt", name="Banned Players"),
-                            Choice(value="banned-ips.txt", name="Banned IPs")
+                    choices=[Choice(value="banned-players.json", name="Banned Players"),
+                            Choice(value="banned-ips.json", name="Banned IPs")
                     ]).execute()
-                openWith(Server + BannedFile)
+                if os.path.isfile(Server + BannedFile):
+                    openWith(Server + BannedFile)
+                else:
+                    openWith(Server + ComparativeDict[BannedFile])
             else:
-                openWith(Server + Settings)
+                if os.path.isfile(Server + Settings):
+                    openWith(Server + Settings)
+                else:
+                    openWith(Server + ComparativeDict[Settings])
         else: break
 
 def Init():

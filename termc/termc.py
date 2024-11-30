@@ -126,7 +126,6 @@ def Ram():
     ramAllocation = []
     for ramSymbol in range(1, (RamMemory().total//1000000000)-1):
         ramAllocation.append(f"{ramSymbol}G")
-
     RamSelection = inquirer.select(
         message="How many GB of ram you'll use?",
         choices=ramAllocation,

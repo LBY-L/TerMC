@@ -9,7 +9,7 @@
 #    ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝
 # “MANKIND IS DEAD. BLOOD IS FUEL. HELL IS FULL.” - UltraKill
 
-import os, readline, urllib.request, shutil
+import os, urllib.request, shutil
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
@@ -298,8 +298,12 @@ def StartMethod():
 def RemoveMethod():
     while True:
         Server = SelectServer("Select a server to remove")
+        ConfirmDelete = inquirer.confirm(
+            message=f"Do you want to remove {os.path.basename(os.path.normpath(Server))}",
+            default=False
+        ).execute()
 
-        if Server:
+        if Server and ConfirmDelete == True:
             if os.path.isdir(Server): # A very improbable edge case
                 shutil.rmtree(Server) # But maybe can save someones computer
             else:
@@ -309,13 +313,19 @@ def RemoveMethod():
             break
 
 def EditMethod():
-    EDITOR = shutil.which(os.environ["EDITOR"])
+    try:
+        EDITOR = shutil.which(os.environ["EDITOR"])
+    except KeyError:
+        EDITOR = shutil.which("nano")
+
     ComparativeDict = {
         "ops.json": "ops.txt",
         "banned-players.json": "banned-players.txt",
         "banned-ips.json": "banned-ips.txt",
-        "whitelist.json": "white-list.txt"
+        "whitelist.json": "white-list.txt",
+        "server.properties": "server.properties"
     }
+
     Server = SelectServer("Select a server to edit")
 
     def openWith(FilePath):
@@ -328,6 +338,7 @@ def EditMethod():
         return
 
     while True:
+
         Settings = inquirer.select(message=f"{os.path.basename(os.path.normpath(Server))} Settings...",
                                     choices=[
                                     Choice(value="server.properties", name="Server Properties"),
@@ -357,27 +368,27 @@ def EditMethod():
         else: break
 
 def Init():
-    MethodSelection = inquirer.select(message="What do you want to do?",
-                                    choices=["Create",
-                                             "Edit",
-                                             "Start",
-                                             "Remove",
-                                             Separator(),
-                                             Choice(value=None, name="Exit")]
-                                ).execute()
-    if MethodSelection:
-        match MethodSelection:
-            case "Create":
-                CreateMethod()
-            case "Edit":
-                EditMethod()
-            case "Start":
-                StartMethod()
-            case "Remove":
-                RemoveMethod()
-        Init()
+    MethodSelection = True
+    while MethodSelection:
+        MethodSelection = inquirer.select(
+            message="What do you want to do?",
+            choices=["Create",
+                     "Edit",
+                     "Start",
+                     "Remove",
+                     Separator(),
+                     Choice(value=None, name="Exit")]
+                    ).execute()
 
-    quit()
+        match MethodSelection:
+                case "Create":
+                    CreateMethod()
+                case "Edit":
+                    EditMethod()
+                case "Start":
+                    StartMethod()
+                case "Remove":
+                    RemoveMethod()
 
 if __name__ == "__main__":
     Init()

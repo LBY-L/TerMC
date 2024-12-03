@@ -33,7 +33,7 @@
 ## Install
 Is higly recommended to use `pipx` insted of `pip`, but you can use it anyway
 ```bash
-pipx install git+https://github.com/LBY-L/TerMC.git
+pipx install git+https://github.com/LBY-L/TerMC.git --force
 ```
 
 ## Run

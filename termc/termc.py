@@ -500,7 +500,7 @@ def Init():
     while MethodSelection:
         MethodSelection = inquirer.select(
             message="What do you want to do?",
-            choices=[Choice(value="Create", name="Create New server"),
+            choices=[Choice(value="Create", name="Create New Server"),
                      Choice(value="Edit", name="Edit Server"),
                      Choice(value="Start", name="Start Server"),
                      Separator("─" * 23),

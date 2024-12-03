@@ -266,7 +266,6 @@ def ServerSettings(SERVERPATH="", SERVERNAME="", COMPARATIVES="", SETTINGS="", S
             elif Settings == "Remove":
                 confirmationStatus = RemoveServer(serverFolderPath=SERVERPATH)
                 if confirmationStatus:
-                    CustomBars("Good bye!")
                     break
 
             else:
@@ -286,22 +285,6 @@ def printLogo():
     logoSpaces = width//2-6
     creeperLogo = f"""
 {" " * logoSpaces}{GREEN}████    ████{RESET}
-{" " * logoSpaces}{GREEN}████    ████{RESET}
-{" " * logoSpaces}{GREEN}    ████    {RESET}
-{" " * logoSpaces}{GREEN}  ████████  {RESET}
-{" " * logoSpaces}{GREEN}  ████████  {RESET}
-{" " * logoSpaces}{GREEN}  ██    ██  {RESET}
-"""
-    print(creeperLogo, flush=True)
-
-def printGodByeLogo():
-    GREEN = "\x1b[38;5;76m"
-    RESET = "\x1b[0m"
-    width, _ = os.get_terminal_size()
-    logoSpaces = width//2-6
-    creeperLogo = f"""{" " * logoSpaces}{GREEN}                   Zz{RESET}
-{" " * logoSpaces}{GREEN}                 zZ{RESET}
-{" " * logoSpaces}{GREEN}               Zz{RESET}
 {" " * logoSpaces}{GREEN}████    ████{RESET}
 {" " * logoSpaces}{GREEN}    ████    {RESET}
 {" " * logoSpaces}{GREEN}  ████████  {RESET}
@@ -500,9 +483,9 @@ def Init():
     while MethodSelection:
         MethodSelection = inquirer.select(
             message="What do you want to do?",
-            choices=[Choice(value="Create", name="Create New server"),
-                     Choice(value="Edit", name="Edit Server"),
-                     Choice(value="Start", name="Start Server"),
+            choices=[Choice(value="Create", name="Create: New server"),
+                     Choice(value="Edit", name="Edit: Server"),
+                     Choice(value="Start", name="Start: Server"),
                      Separator("─" * 23),
                      Choice(value=None, name="Exit")
                      ],
@@ -520,8 +503,6 @@ def Init():
                     CustomBars("Let's start your server!")
                     StartMethod()
                 case None:
-                    CustomBars("Good Bye!", colorCode="76")
-                    printGodByeLogo()
                     exit(0)
 
 if __name__ == "__main__":

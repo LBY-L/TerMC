@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: termc
+Version: 0.8.10
+Summary: A simple script to download and execute Minecraft servers
+Author: LBY_L
+License: GNU General Public License 3.0 (GPL 3.0)
+Keywords: cli,tui
+Requires-Python: >=3.10
+License-File: LICENSE
+Requires-Dist: yaspin
+Requires-Dist: InquirerPy
+Requires-Dist: psutil

@@ -490,8 +490,7 @@ def EditMethod():
                    SETTINGS=Settings)
 
 def Init():
-    with open('VERSION.json', 'r') as file:
-        VERSION = load(file)["TerMCVersion"]
+    VERSION = "v0.8.10"
    
     printLogo()
     CustomBars(f"Welcome to TerMC {VERSION}!", colorCode="76")

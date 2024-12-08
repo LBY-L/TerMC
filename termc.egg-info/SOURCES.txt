@@ -1,0 +1,12 @@
+LICENSE
+README.md
+setup.py
+termc/MANIFIEST.json
+termc/__init__.py
+termc/termc.py
+termc.egg-info/PKG-INFO
+termc.egg-info/SOURCES.txt
+termc.egg-info/dependency_links.txt
+termc.egg-info/entry_points.txt
+termc.egg-info/requires.txt
+termc.egg-info/top_level.txt

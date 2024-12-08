@@ -1,2 +1,0 @@
-[console_scripts]
-termc = termc.termc:Init

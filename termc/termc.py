@@ -70,6 +70,7 @@ class Tools:
     def GetNormPath(self, path=""):
         return os.path.basename(os.path.normpath(path))
 
+
     def CustomBars(self, text="", colorCode="155"):
         color = f"\x1b[38;5;{colorCode}m"
         plusColorLen = len(colorCode)
@@ -77,6 +78,7 @@ class Tools:
         midWidth = (len(text) // 2) + 1
         midBar = f"{'─' * (width//2 - midWidth)} {color}{text}\x1b[0m "
         print(f"{midBar}{'─' * (width - (len(midBar) - (12 + plusColorLen)))}", flush=True)
+
 
     def RemoveServer(self, serverFolderPath=""):
             style = get_style(style={"answermark": "#9c061d", 
@@ -100,6 +102,7 @@ class Tools:
                     print("WTF BRO? THIS IS ONLY 6e-1000000% POSSIBLE: No such file or directory")
             return ConfirmDelete
 
+
     def Ram(self):
         ramAllocation = []
         for ramSymbol in range(1, (RamMemory().total//1000000000)-1):
@@ -111,6 +114,7 @@ class Tools:
         ).execute()
 
         return RamSelection
+
 
     def Folder(self):
         HOME = os.environ["HOME"]
@@ -133,6 +137,7 @@ class Tools:
         ).execute()
 
         return f"{HOME}/MinecraftServers/{result}/"
+
 
     def SetupFolder(self, paper=False, jar="", Ram="", Folder=""):
         HOME = os.environ["HOME"]
@@ -166,6 +171,7 @@ class Tools:
 -jar {jar} nogui")
             else:
                 file.write(f"java -Xms{Ram} -Xmx{Ram} -jar {jar} nogui")
+
 
     def ServerSettings(self, SERVERPATH="", SERVERNAME="", COMPARATIVES="", SETTINGS="", SETTINGSBANS=""):
         def OpenWith(FilePath):
@@ -212,6 +218,7 @@ class Tools:
                     else:
                         OpenWith(SERVERPATH + COMPARATIVES[Settings])
 
+
     def printLogo(self):
         GREEN = "\x1b[38;5;76m"
         RESET = "\x1b[0m"
@@ -226,6 +233,7 @@ class Tools:
 {" " * logoSpaces}{GREEN}  ██    ██  {RESET}
 """
         print(creeperLogo, flush=True)
+
 
     def printGodByeLogo(self):
         GREEN = "\x1b[38;5;76m"
@@ -244,17 +252,21 @@ class Tools:
 """
         print(creeperLogo, flush=True)
 
+
+
 class ServersEntropy:
     def __init__(self):
         dTools = Tools()
         self.SetupFolder = dTools.SetupFolder
         self.UserAgent = {'User-Agent': 'Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion'}
 
+
     def DowloadJar(self, dowloadUrl, path, fileName, version):
         with yaspin(text=f"[ Downloading Minecraft {version} ]") as sp:
             request = urllib.request.Request(dowloadUrl, headers=self.UserAgent)
             with urllib.request.urlopen(request) as response, open(path + fileName, "wb") as outFile:
                 outFile.write(response.read())
+
 
     @yaspin(Spinners.growHorizontal, "[ Getting Available Versions ]")
     def GetMohistVer(self):
@@ -265,6 +277,7 @@ class ServersEntropy:
             versions = loads(response.read())["versions"]
 
         return list(reversed(versions))
+
 
     @yaspin(Spinners.growHorizontal, "[ Getting Available Builds ]")
     def GetMohistBuild(self, ver):
@@ -277,6 +290,7 @@ class ServersEntropy:
         for buildsList in list(reversed(builds["builds"])):
             buildsDict[buildsList["number"]] = buildsList["url"]
         return buildsDict
+
 
     @yaspin(Spinners.growHorizontal, "[ Getting Available Versions ]")
     def GetVanilla(self):
@@ -298,6 +312,7 @@ class ServersEntropy:
 
         return versionsDict
 
+
     @yaspin(Spinners.growHorizontal, "[ Getting Available Versions ]")
     def GetFabricVer(self):
         request = urllib.request.Request("https://meta.fabricmc.net/v2/versions",
@@ -312,6 +327,7 @@ class ServersEntropy:
             listVer.append(versionInfo["version"])
 
         return listVer
+
 
     @yaspin(Spinners.growHorizontal, "[ Getting Available Loaders ]")
     def GetFabricLoader(self, ver):
@@ -329,6 +345,7 @@ class ServersEntropy:
                 break
         return loadersList
 
+
     @yaspin(Spinners.growHorizontal, "[ Getting Available Versions ]")
     def GetPaperVer(self):
         request = urllib.request.Request("https://api.papermc.io/v2/projects/paper/",
@@ -344,6 +361,7 @@ class ServersEntropy:
                 listVer.append(versionInfo)
         return list(reversed(listVer))
 
+
     @yaspin(Spinners.growHorizontal, "[ Getting Available Builds ]")
     def GetPaperBuild(self, ver):
         request = urllib.request.Request(f"https://api.papermc.io/v2/projects/paper/versions/{ver}/builds/",
@@ -357,6 +375,7 @@ class ServersEntropy:
         for buildVerRaw in list(reversed(builds)):
             buildsList.append(buildVerRaw["build"])
         return buildsList
+
 
     @yaspin(Spinners.growHorizontal, "[ Getting Available Versions ]")
     def GetBTAVer(self):
@@ -388,6 +407,7 @@ class ServersEntropy:
 
         return(verDict)
 
+
     def BTA(self, RamAllocation="", FolderPath=""):
         Versions = self.GetBTAVer()
         Bersion = inquirer.fuzzy(message="What version you want?",
@@ -396,6 +416,7 @@ class ServersEntropy:
 
         self.SetupFolder(jar="bta.jar", Ram=RamAllocation, Folder=FolderPath)
         self.DowloadJar(Versions[Bersion], FolderPath, "bta.jar", Bersion)
+
 
     def Vanilla(self, RamAllocation="", FolderPath=""):
         Versions = self.GetVanilla()
@@ -407,6 +428,7 @@ class ServersEntropy:
         self.SetupFolder(jar="server.jar", Ram=RamAllocation, Folder=FolderPath)
 
         self.DowloadJar(Versions[Version], FolderPath, "server.jar", Version)
+
 
     def Fabric(self, RamAllocation="", FolderPath=""):
         Versions = self.GetFabricVer()
@@ -423,6 +445,7 @@ class ServersEntropy:
 
         self.DowloadJar(f"https://meta.fabricmc.net/v2/versions/loader/{Fersion}/{Foader}/1.0.0/server/jar",
                          FolderPath, "fabric.jar", Fersion)
+
 
     def Paper(self, RamAllocation="", FolderPath=""):
         Versions = self.GetPaperVer()
@@ -445,6 +468,7 @@ class ServersEntropy:
         self.DowloadJar(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{Build}/downloads/{Download}", 
                         FolderPath, "paper.jar", Persion)
 
+
     def Mohist(self, RamAllocation="", FolderPath=""):
         Versions = self.GetMohistVer()
         Mersion = inquirer.fuzzy(message="What version you want?",
@@ -461,6 +485,8 @@ class ServersEntropy:
         with yaspin(text=f"[ Downloading Minecraft {Mersion} ]") as sp:
             self.DowloadJar(Builds[Build], FolderPath, "mohist.jar", Mersion)
 
+
+
 class MethodSelections:
     def __init__(self):
         self.dServersEntropy = ServersEntropy()
@@ -468,6 +494,7 @@ class MethodSelections:
         self.GetNormPath = self.dTools.GetNormPath
         self.SelectServer = self.dTools.SelectServer
         self.CustomBars = self.dTools.CustomBars
+
 
     def CreateMethod(self):
         FOLDER = self.dTools.Folder()
@@ -483,13 +510,19 @@ class MethodSelections:
         ).execute()
 
         match Server:
-            case "BTA": self.dServersEntropy.BTA(RamAllocation=RAM, FolderPath=FOLDER)
-            case "Vanilla": self.dServersEntropy.Vanilla(RamAllocation=RAM, FolderPath=FOLDER)
-            case "Fabric": self.dServersEntropy.Fabric(RamAllocation=RAM, FolderPath=FOLDER)
-            case "Paper": self.dServersEntropy.Paper(RamAllocation=RAM, FolderPath=FOLDER)
-            case "Mohist": self.dServersEntropy.Mohist(RamAllocation=RAM, FolderPath=FOLDER)
+            case "BTA": 
+                self.dServersEntropy.BTA(RamAllocation=RAM, FolderPath=FOLDER)
+            case "Vanilla": 
+                self.dServersEntropy.Vanilla(RamAllocation=RAM, FolderPath=FOLDER)
+            case "Fabric": 
+                self.dServersEntropy.Fabric(RamAllocation=RAM, FolderPath=FOLDER)
+            case "Paper": 
+                self.dServersEntropy.Paper(RamAllocation=RAM, FolderPath=FOLDER)
+            case "Mohist": 
+                self.dServersEntropy.Mohist(RamAllocation=RAM, FolderPath=FOLDER)
 
         self.CustomBars(f"{self.GetNormPath(FOLDER)} set up done!")
+
 
     def StartMethod(self):
         Server, serverName = self.SelectServer("Select a server to run")
@@ -499,6 +532,7 @@ class MethodSelections:
             self.CustomBars(f"{serverName} has been shut down")
         else:
             self.CustomBars(f"Good bye!")
+
 
     def EditMethod(self):
         Server, serverName = self.SelectServer("Select a server to edit")
@@ -537,6 +571,8 @@ class MethodSelections:
                             SERVERNAME=serverName,
                             COMPARATIVES=ComparativeDict,
                             SETTINGS=Settings)
+
+
 
 def Init():
     dTools = Tools()

@@ -30,6 +30,10 @@ TerMCStyle = get_style({
 }, style_override=False)
 
 class Tools:
+    def __init__(self):
+        self.GREEN = "\x1b[38;5;76m"
+        self.RESET = "\x1b[0m"
+
     def SelectServer(self, title=""): # This code is a shit
         HOME = os.environ["HOME"]
         serversNames = os.listdir(f"{HOME}/MinecraftServers")
@@ -54,17 +58,16 @@ class Tools:
                                     name=f"{files} -> Corrupted, Please remove it!"))
 
         serversTypes.append(Separator("─" * len(title)))
-        serversTypes.append(Choice(value=None,
-                                name="Exit"))
+        serversTypes.append(Choice(value=None, name="Exit"))
 
         Server = inquirer.select(message=title,
-                                choices=list(serversTypes),
+                                choices=serversTypes,
                                 style=TerMCStyle
                                 ).execute()
         if Server == None:
             return (Server, "")
-
-        return (Server, self.GetNormPath(Server))
+        else:
+            return (Server, self.GetNormPath(Server))
 
 
     def GetNormPath(self, path=""):
@@ -100,6 +103,7 @@ class Tools:
                     shutil.rmtree(serverFolderPath) # But maybe can save someones computer
                 else:
                     print("WTF BRO? THIS IS ONLY 6e-1000000% POSSIBLE: No such file or directory")
+            
             return ConfirmDelete
 
 
@@ -124,17 +128,27 @@ class Tools:
                 return False
             if "/" in result or "\\" in result or " " in result or "|" in result:
                 return False
-            if os.path.isdir(f"{HOME}/MinecraftServers/{result}/"):
-                return False
             return True
 
         result = inquirer.text(
                 message="Name:",
                 validate=GValidator,
-                invalid_message="Input cannot be empty and can't contain spaces, \
-                or '/' & '\\', '|' and can't have the same name!",
+                invalid_message="Invailid values: '/', '\\', '|', ' '",
                 style=TerMCStyle
         ).execute()
+        
+        usedNames = [
+            int(element.split('-')[-1])
+            for element in os.listdir(f"{HOME}/MinecraftServers")
+            if element.startswith(f"{result}-") and element.split('-')[-1].isdigit()
+        ]
+        
+        # Determinar el siguiente número disponible
+        if usedNames:
+            next_number = max(usedNames, default=0) + 1
+            
+            # Crear y añadir el nuevo nombre
+            result = f"{result}-{next_number}"
 
         return f"{HOME}/MinecraftServers/{result}/"
 
@@ -172,83 +186,97 @@ class Tools:
             else:
                 file.write(f"java -Xms{Ram} -Xmx{Ram} -jar {jar} nogui")
 
+    def OpenWith(self, FilePath):
+        try:
+            EDITOR = shutil.which(os.environ["EDITOR"])
+        except KeyError:
+            EDITOR = shutil.which("nano")
 
-    def ServerSettings(self, SERVERPATH="", SERVERNAME="", COMPARATIVES="", SETTINGS="", SETTINGSBANS=""):
-        def OpenWith(FilePath):
-            try:
-                EDITOR = shutil.which(os.environ["EDITOR"])
-            except KeyError:
-                EDITOR = shutil.which("nano")
+        if os.path.isfile(FilePath):
+            os.system(f"{EDITOR} {FilePath}")
+        else:
+            print(f"  Seems that {self.GetNormPath(FilePath)} has been not yet\n  created or has been deleted")
 
-            if os.path.isfile(FilePath):
-                os.system(f"{EDITOR} {FilePath}")
+    def BannedIpsSettings(self, serverConf=[]) -> False:
+            serverPath = serverConf[0]
+            serverFilenames = serverConf[1]
+            BannedFile = inquirer.select(
+                message="Select which one to open",
+                choices=[
+                    Choice(value="banned-players.json", name="Banned Players"),
+                    Choice(value="banned-ips.json", name="Banned IPs")
+                    ],
+                style=TerMCStyle
+                ).execute()
+
+            if os.path.isfile(serverPath + BannedFile):
+                self.OpenWith(serverPath + BannedFile)
             else:
-                print(rf"""  Seems that {self.GetNormPath(FilePath)} has been not yet
-  created or has been deleted""")
+                self.OpenWith(serverPath + serverFilenames[BannedFile])
+
+
+    def ServerSettings(self, SERVERPATH="", SERVERNAME="", COMPARATIVES=""):
         while True:
             Settings = inquirer.select(
                         message=f"{SERVERNAME} Settings:",
-                        choices=SETTINGS["Settings"],
+                        choices=[
+                                Choice(value="server.properties", name="Server Properties"),
+                                Choice(value="run.sh", name="Run Script"),
+                                Choice(value="eula.txt", name="EULA File"),
+                                Choice(value="ops.json", name="Ops File"),
+                                Choice(value=[self.BannedIpsSettings, [SERVERPATH, COMPARATIVES]],
+                                        name="Banned Players/IP Files"),
+                                Choice(value="whitelist.json", name="White List File"),
+                                Choice(value=[self.RemoveServer, SERVERPATH], 
+                                        name=f"Remove {SERVERNAME}"),
+                                Separator("─" * (len(SERVERNAME) + 10)),
+                                Choice(value=None, name="Exit")
+                        ],
                         style=TerMCStyle
                         ).execute()
-            match Settings:
-                case "BannedIps":
-                    BannedFile = inquirer.select(
-                        message="Select which one to open",
-                        choices=SETTINGS["BannedIps"],
-                        style=TerMCStyle
-                        ).execute()
-
-                    if os.path.isfile(SERVERPATH + BannedFile):
-                        OpenWith(SERVERPATH + BannedFile)
-                    else:
-                        OpenWith(SERVERPATH + COMPARATIVES[BannedFile])
-
-                case "Remove":
-                    confirmationStatus = self.RemoveServer(serverFolderPath=SERVERPATH)
-                    if confirmationStatus:
-                        self.CustomBars("Good bye!")
-                        break
-                case None:
-                    self.CustomBars(f"Done editing {SERVERNAME}")
+            
+            if Settings:
+                action, serverConf = Settings
+                breakIt = action(serverConf)
+                if breakIt:
                     break
-                case _:
-                    if os.path.isfile(SERVERPATH + Settings):
-                        OpenWith(SERVERPATH + Settings)
-                    else:
-                        OpenWith(SERVERPATH + COMPARATIVES[Settings])
+            elif Settings == None:
+                self.CustomBars(f"Done editing {SERVERNAME}")
+                break
+            else:
+                if os.path.isfile(SERVERPATH + Settings):
+                    self.OpenWith(SERVERPATH + Settings)
+                else:
+                    self.OpenWith(SERVERPATH + COMPARATIVES[Settings])
+
 
 
     def printLogo(self):
-        GREEN = "\x1b[38;5;76m"
-        RESET = "\x1b[0m"
         width, _ = os.get_terminal_size()
         logoSpaces = width//2-6
         creeperLogo = f"""
-{" " * logoSpaces}{GREEN}████    ████{RESET}
-{" " * logoSpaces}{GREEN}████    ████{RESET}
-{" " * logoSpaces}{GREEN}    ████    {RESET}
-{" " * logoSpaces}{GREEN}  ████████  {RESET}
-{" " * logoSpaces}{GREEN}  ████████  {RESET}
-{" " * logoSpaces}{GREEN}  ██    ██  {RESET}
+{" " * logoSpaces}{self.GREEN}████    ████{self.RESET}
+{" " * logoSpaces}{self.GREEN}████    ████{self.RESET}
+{" " * logoSpaces}{self.GREEN}    ████    {self.RESET}
+{" " * logoSpaces}{self.GREEN}  ████████  {self.RESET}
+{" " * logoSpaces}{self.GREEN}  ████████  {self.RESET}
+{" " * logoSpaces}{self.GREEN}  ██    ██  {self.RESET}
 """
         print(creeperLogo, flush=True)
 
 
     def printGodByeLogo(self):
-        GREEN = "\x1b[38;5;76m"
-        RESET = "\x1b[0m"
         width, _ = os.get_terminal_size()
         logoSpaces = width//2-6
         creeperLogo = f"""
-{" " * logoSpaces}{GREEN}                  Zz{RESET}
-{" " * logoSpaces}{GREEN}                zZ{RESET}
-{" " * logoSpaces}{GREEN}              Zz{RESET}
-{" " * logoSpaces}{GREEN}████    ████{RESET}
-{" " * logoSpaces}{GREEN}    ████    {RESET}
-{" " * logoSpaces}{GREEN}  ████████  {RESET}
-{" " * logoSpaces}{GREEN}  ████████  {RESET}
-{" " * logoSpaces}{GREEN}  ██    ██  {RESET}
+{" " * logoSpaces}{self.GREEN}                  Zz{self.RESET}
+{" " * logoSpaces}{self.GREEN}                zZ{self.RESET}
+{" " * logoSpaces}{self.GREEN}              Zz{self.RESET}
+{" " * logoSpaces}{self.GREEN}████    ████{self.RESET}
+{" " * logoSpaces}{self.GREEN}    ████    {self.RESET}
+{" " * logoSpaces}{self.GREEN}  ████████  {self.RESET}
+{" " * logoSpaces}{self.GREEN}  ████████  {self.RESET}
+{" " * logoSpaces}{self.GREEN}  ██    ██  {self.RESET}
 """
         print(creeperLogo, flush=True)
 
@@ -256,8 +284,8 @@ class Tools:
 
 class ServersEntropy:
     def __init__(self):
-        dTools = Tools()
-        self.SetupFolder = dTools.SetupFolder
+        Tl = Tools()
+        self.SetupFolder = Tl.SetupFolder
         self.UserAgent = {'User-Agent': 'Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion'}
 
 
@@ -359,6 +387,7 @@ class ServersEntropy:
         for versionInfo in versions:
             if versionInfo != "1.13-pre7":
                 listVer.append(versionInfo)
+
         return list(reversed(listVer))
 
 
@@ -374,6 +403,7 @@ class ServersEntropy:
 
         for buildVerRaw in list(reversed(builds)):
             buildsList.append(buildVerRaw["build"])
+
         return buildsList
 
 
@@ -489,39 +519,33 @@ class ServersEntropy:
 
 class MethodSelections:
     def __init__(self):
-        self.dServersEntropy = ServersEntropy()
-        self.dTools = Tools()
-        self.GetNormPath = self.dTools.GetNormPath
-        self.SelectServer = self.dTools.SelectServer
-        self.CustomBars = self.dTools.CustomBars
+        self.ServerEnty = ServersEntropy()
+        self.Tl = Tools()
+        self.GetNormPath = self.Tl.GetNormPath
+        self.SelectServer = self.Tl.SelectServer
+        self.CustomBars = self.Tl.CustomBars
 
 
     def CreateMethod(self):
-        FOLDER = self.dTools.Folder()
-        RAM = self.dTools.Ram()
+        Folder = self.Tl.Folder()
+        self.CustomBars(f"Starting the setup of {self.GetNormPath(Folder)}")
+        
+        Ram = self.Tl.Ram()
+
         Server = inquirer.select(
             message="What server type you'll use?",
-            choices=["Fabric",
-                    "Paper",
-                    "Vanilla",
-                    "Mohist",
-                    Choice(value="BTA", name="BTA (Better Than Adventure)")],
+            choices=[Choice(value=self.ServerEnty.Fabric, name="Fabric"),
+                    Choice(value=self.ServerEnty.Paper, name="Paper"),
+                    Choice(value=self.ServerEnty.Vanilla, name="Vanilla"),
+                    Choice(value=self.ServerEnty.Mohist, name="Mohist"),
+                    Choice(value=self.ServerEnty.BTA, name="BTA (Better Than Adventure)")],
                     style=TerMCStyle
         ).execute()
 
-        match Server:
-            case "BTA": 
-                self.dServersEntropy.BTA(RamAllocation=RAM, FolderPath=FOLDER)
-            case "Vanilla": 
-                self.dServersEntropy.Vanilla(RamAllocation=RAM, FolderPath=FOLDER)
-            case "Fabric": 
-                self.dServersEntropy.Fabric(RamAllocation=RAM, FolderPath=FOLDER)
-            case "Paper": 
-                self.dServersEntropy.Paper(RamAllocation=RAM, FolderPath=FOLDER)
-            case "Mohist": 
-                self.dServersEntropy.Mohist(RamAllocation=RAM, FolderPath=FOLDER)
-
-        self.CustomBars(f"{self.GetNormPath(FOLDER)} set up done!")
+        action = Server
+        action(RamAllocation=Ram, FolderPath=Folder)
+        
+        self.CustomBars(f"{self.GetNormPath(Folder)} set up done!")
 
 
     def StartMethod(self):
@@ -549,68 +573,46 @@ class MethodSelections:
             "server.properties": "server.properties"
         }
 
-        Settings = {
-            "Settings": [
-                Choice(value="server.properties", name="Server Properties"),
-                Choice(value="run.sh", name="Run Script"),
-                Choice(value="eula.txt", name="EULA File"),
-                Choice(value="ops.json", name="Ops File"),
-                Choice(value="BannedIps", name="Banned Players/IP Files"),
-                Choice(value="whitelist.json", name="White List File"),
-                Choice(value="Remove", name=f"Remove {serverName}"),
-                Separator("─" * (len(serverName) + 10)),
-                Choice(value=None, name="Exit")
-            ],
-            "BannedIps": [
-                Choice(value="banned-players.json", name="Banned Players"),
-                Choice(value="banned-ips.json", name="Banned IPs")
-            ]
-        }
-
-        self.dTools.ServerSettings(SERVERPATH=Server,
+        self.Tl.ServerSettings(SERVERPATH=Server,
                             SERVERNAME=serverName,
-                            COMPARATIVES=ComparativeDict,
-                            SETTINGS=Settings)
+                            COMPARATIVES=ComparativeDict)
 
 
 
 def Init():
-    dTools = Tools()
-    dMethodSelections = MethodSelections()
+    Tl = Tools()
+    MethodSel = MethodSelections()
     with open(f'{__file__[:-8]}MANIFIEST.json', 'r') as file:
         VERSION = load(file)["TerMCVersion"]
 
-    dTools.printLogo()
-    dTools.CustomBars(f"Welcome to TerMC {VERSION}!", colorCode="76")
+    Tl.printLogo()
+    Tl.CustomBars(f"Welcome to TerMC {VERSION}!", colorCode="76")
 
     MethodSelection = True
     while MethodSelection:
         MethodSelection = inquirer.select(
             message="What do you want to do?",
             choices=[
-                Choice(value="Create", name="Create New Server"),
-                Choice(value="Edit", name="Edit Server"),
-                Choice(value="Start", name="Start Server"),
+                Choice(value=[MethodSel.CreateMethod, "Let's create your own server!"], 
+                        name="Create New Server"),
+                Choice(value=[MethodSel.EditMethod, "Let's edit your servers!"], 
+                        name="Edit Server"),
+                Choice(value=[MethodSel.StartMethod, "Let's start your server!"], 
+                        name="Start Server"),
                 Separator("─" * 23),
                 Choice(value=None, name="Exit")
                 ],
             style=TerMCStyle
             ).execute()
 
-        match MethodSelection:
-            case "Create":
-                dTools.CustomBars("Let's create your own server!")
-                dMethodSelections.CreateMethod()
-            case "Edit":
-                dTools.CustomBars("Let's edit your servers!")
-                dMethodSelections.EditMethod()
-            case "Start":
-                dTools.CustomBars("Let's start your server!")
-                dMethodSelections.StartMethod()
-            case None:
-                dTools.CustomBars("Good Bye!", colorCode="76")
-                dTools.printGodByeLogo()
-                exit(0)
+        if MethodSelection:
+            action, name = MethodSelection
+            Tl.CustomBars(name)
+            action()
+        else:
+            Tl.CustomBars("Good Bye!", colorCode="76")
+            Tl.printGodByeLogo()
+            exit(0)
 
 if __name__ == "__main__":
     Init()

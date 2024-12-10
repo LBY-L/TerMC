@@ -70,9 +70,12 @@ class Tools:
         serversTypes.append(Separator("─" * len(title)))
         serversTypes.append(Choice(value=None, name="Exit"))
 
+        Server = None
         Server = inquirer.select(message=title,
                                 choices=serversTypes,
-                                style=TerMCStyle
+                                style=TerMCStyle,
+                                mandatory=False,
+                                raise_keyboard_interrupt=False
                                 ).execute()
         if Server == None:
             return (Server, "")
@@ -100,12 +103,15 @@ class Tools:
                                      "answered_question": "#f7966d", 
                                      "answer": "#9c061d"}, style_override=False)
             if serverFolderPath:
+                ConfirmDelete = False
                 ConfirmDelete = inquirer.confirm(
                     message=f"Do you want to remove {self.GetNormPath(serverFolderPath)}",
                     style=style,
                     qmark='@',
                     amark='@',
                     default=False,
+                    mandatory=False,
+                    raise_keyboard_interrupt=False
                 ).execute()
 
             if serverFolderPath and ConfirmDelete == True:
@@ -124,7 +130,7 @@ class Tools:
         RamSelection = inquirer.select(
             message="How many GB of ram you'll use?",
             choices=ramAllocation,
-            style=TerMCStyle
+            style=TerMCStyle,
         ).execute()
 
         return RamSelection
@@ -173,7 +179,9 @@ class Tools:
         AcceptEula = inquirer.confirm(
             message="Do you want to accept the Minecraft EULA?",
             default=True,
-            style=TerMCStyle
+            style=TerMCStyle,
+            mandatory=False,
+            raise_keyboard_interrupt=False
         ).execute()
 
         if AcceptEula:
@@ -209,13 +217,16 @@ class Tools:
     def BannedIpsSettings(self, serverConf=[]) -> False:
             serverPath = serverConf[0]
             serverFilenames = serverConf[1]
+            BannedFile = ""
             BannedFile = inquirer.select(
                 message="Select which one to open",
                 choices=[
                     Choice(value="banned-players.json", name="Banned Players"),
                     Choice(value="banned-ips.json", name="Banned IPs")
                     ],
-                style=TerMCStyle
+                style=TerMCStyle,
+                mandatory=False,
+                raise_keyboard_interrupt=False
                 ).execute()
             self.OpenWith(serverPath + BannedFile, serverFilenames)
 
@@ -428,7 +439,7 @@ class ServersEntropy:
         Versions = self.GetVanilla()
         Version = inquirer.fuzzy(message="What version you want?",
                                 choices=list(Versions.keys()),
-                                style=TerMCStyle
+                                style=TerMCStyle,
                                 ).execute()
 
         self.SetupFolder(jar="server.jar", Ram=RamAllocation, Folder=FolderPath)
@@ -445,7 +456,8 @@ class ServersEntropy:
         Loader = self.GetFabricLoader(Fersion)
         Foader = inquirer.fuzzy(message="What loader version you'll use??",
                                 choices=Loader,
-                                style=TerMCStyle).execute()
+                                style=TerMCStyle,
+                                ).execute()
 
         self.SetupFolder(jar="fabric.jar", Ram=RamAllocation, Folder=FolderPath)
 
@@ -457,11 +469,13 @@ class ServersEntropy:
         Versions = self.GetPaperVer()
         Persion = inquirer.fuzzy(message="What version you want?",
                                     choices=Versions,
-                                    style=TerMCStyle).execute()
+                                    style=TerMCStyle,
+                                  ).execute()
         Builds = self.GetPaperBuild(Persion)
         Build = inquirer.fuzzy(message="What build version you'll use?",
                                     choices=Builds,
-                                    style=TerMCStyle).execute()
+                                    style=TerMCStyle,
+                               ).execute()
 
         self.SetupFolder(paper=True, jar="paper.jar", Ram=RamAllocation, Folder=FolderPath)
 
@@ -479,12 +493,14 @@ class ServersEntropy:
         Versions = self.GetMohistVer()
         Mersion = inquirer.fuzzy(message="What version you want?",
                                 choices=Versions,
-                                style=TerMCStyle).execute()
+                                style=TerMCStyle,
+                                ).execute()
 
         Builds = self.GetMohistBuild(Mersion)
         Build = inquirer.fuzzy(message="What build version you'll use?",
                                 choices=list(Builds.keys()),
-                                style=TerMCStyle).execute()
+                                style=TerMCStyle,
+                                ).execute()
 
         self.SetupFolder(jar="mohist.jar", Ram=RamAllocation, Folder=FolderPath)
 
@@ -509,24 +525,33 @@ class MethodSelections:
 
 
     def CreateMethod(self): # Creates a new server
-        Folder = self.Tl.Folder()
-        self.CustomBars(f"Starting the setup of {self.GetNormPath(Folder)}")
+        try: 
+            Folder = self.Tl.Folder()
+            self.CustomBars(f"Starting the setup of {self.GetNormPath(Folder)}")
+            Ram = self.Tl.Ram()
+
+            Server = inquirer.select(
+                message="What server type you'll use?",
+                choices=[Choice(value=self.ServerEnty.Fabric, name="Fabric"),
+                        Choice(value=self.ServerEnty.Paper, name="Paper"),
+                        Choice(value=self.ServerEnty.Vanilla, name="Vanilla"),
+                        Choice(value=self.ServerEnty.Mohist, name="Mohist"),
+                        Choice(value=self.ServerEnty.BTA, name="BTA (Better Than Adventure)")],
+                style=TerMCStyle,
+            ).execute()
+        except KeyboardInterrupt:
+            self.CustomBars(f"Operation interrumped by the user", colorCode="160")
+            return 
+
+        try:
+            action = Server
+            action(RamAllocation=Ram, FolderPath=Folder)
+        except KeyboardInterrupt:
+            self.CustomBars(f"Operation interrumped, undoing changes", colorCode="160")
+            if os.path.isdir(Folder):
+                shutil.rmtree(Folder)
+            return
         
-        Ram = self.Tl.Ram()
-
-        Server = inquirer.select(
-            message="What server type you'll use?",
-            choices=[Choice(value=self.ServerEnty.Fabric, name="Fabric"),
-                    Choice(value=self.ServerEnty.Paper, name="Paper"),
-                    Choice(value=self.ServerEnty.Vanilla, name="Vanilla"),
-                    Choice(value=self.ServerEnty.Mohist, name="Mohist"),
-                    Choice(value=self.ServerEnty.BTA, name="BTA (Better Than Adventure)")],
-                    style=TerMCStyle
-        ).execute()
-
-        action = Server
-        action(RamAllocation=Ram, FolderPath=Folder)
-
         self.CustomBars(f"{self.GetNormPath(Folder)} set up done!")
 
 
@@ -556,6 +581,7 @@ class MethodSelections:
         }
 
         while True:
+            Settings = None
             Settings = inquirer.select(
                         message=f"{serverName} Settings:",
                         choices=[
@@ -571,7 +597,9 @@ class MethodSelections:
                                 Separator("─" * (len(serverName) + 10)),
                                 Choice(value=None, name="Exit")
                         ],
-                        style=TerMCStyle
+                        style=TerMCStyle,
+                        mandatory=False,
+                        raise_keyboard_interrupt=False
                         ).execute()
 
             if type(Settings) is list:
@@ -595,9 +623,8 @@ def Init():
 
     Tl.printLogo()
     Tl.CustomBars(f"Welcome to TerMC {VERSION}!", colorCode="76")
-
-    MethodSelection = True
-    while MethodSelection:
+    while True:
+        MethodSelection = None
         MethodSelection = inquirer.select(
             message="What do you want to do?",
             choices=[
@@ -610,7 +637,10 @@ def Init():
                 Separator("─" * 23),
                 Choice(value=None, name="Exit")
                 ],
-            style=TerMCStyle
+                
+            style=TerMCStyle,
+            mandatory=False,
+            raise_keyboard_interrupt=False
             ).execute()
 
         if MethodSelection:

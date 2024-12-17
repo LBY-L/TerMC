@@ -127,6 +127,9 @@ class Tools:
         ramAllocation = []
         for ramSymbol in range(1, (RamMemory().total//1000000000)-1):
             ramAllocation.append(f"{ramSymbol}G")
+        if ramAllocation == []:
+            ramAllocation = ["1G"]
+
         RamSelection = inquirer.select(
             message="How many GB of ram you'll use?",
             choices=ramAllocation,
@@ -171,8 +174,6 @@ class Tools:
 
 
     def SetupFolder(self, paper=False, jar="", Ram="", Folder=""):
-        if not os.path.isdir(f"{self.HOME}/MinecraftServers"):
-            os.mkdir(f"{self.HOME}/MinecraftServers")
 
         os.mkdir(Folder)
 
@@ -618,8 +619,12 @@ class MethodSelections:
 def Init():
     Tl = Tools()
     MethodSel = MethodSelections()
+    HOME = os.environ["HOME"]
     with open(f'{__file__[:-8]}MANIFIEST.json', 'r') as file:
         VERSION = load(file)["TerMCVersion"]
+        
+    if not os.path.isdir(f"{HOME}/MinecraftServers"):
+            os.mkdir(f"{HOME}/MinecraftServers")
 
     Tl.printLogo()
     Tl.CustomBars(f"Welcome to TerMC {VERSION}!", colorCode="76")

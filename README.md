@@ -9,7 +9,7 @@
 > ```bash
 > pkg install python3 python-pip openjdk-17
 > ```
-> IMPORTANT: In the case of Termux, there isn't Openjdk 21 so the 1.21, CAN'T RUN
+> IMPORTANT: In the case of Termux, there isn't an Openjdk 21 package so the 1.21,CAN'T RUN
 
 > Fedora/CentOS/OpenSUSE:
 > ```bash

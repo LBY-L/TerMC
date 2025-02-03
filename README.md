@@ -1,6 +1,6 @@
 <p align="center"><a href="https://github.com/LBY-L/TerMC"><img src="https://github.com/user-attachments/assets/a90c8c78-f223-4922-90f8-c6cb5b049722" alt="Logo" height="450"/></a></p>
 
-<h3 align="center">A simple script to download and execute Minecraft servers 🎇</h3>
+<h3 align="center">🎇 A simple script to download and execute Minecraft servers 🎇</h3>
 
 
 ## Script dependences

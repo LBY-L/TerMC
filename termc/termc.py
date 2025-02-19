@@ -92,15 +92,15 @@ class Tools:
         plusColorLen = len(colorCode)
         width, _ = os.get_terminal_size()
         midWidth = (len(text) // 2) + 1
-        midBar = f"{'─' * (width//2 - midWidth)} {color}{text}\x1b[0m "
-        print(f"{midBar}{'─' * (width - (len(midBar) - (12 + plusColorLen)))}", flush=True)
+        midBar = f"{'/' * (width//2 - midWidth)} {color}{text}\x1b[0m "
+        print(f"{midBar}{'\\' * (width - (len(midBar) - (12 + plusColorLen)))}", flush=True)
 
 
     def RemoveServer(self, serverFolderPath=""): # Gives a propt to remove a server and wait for user confirmation
-            style = get_style(style={"answermark": "#9c061d", 
-                                     "questionmark": "#9c061d", 
-                                     "question": "#f7966d", 
-                                     "answered_question": "#f7966d", 
+            style = get_style(style={"answermark": "#9c061d",
+                                     "questionmark": "#9c061d",
+                                     "question": "#f7966d",
+                                     "answered_question": "#f7966d",
                                      "answer": "#9c061d"}, style_override=False)
             if serverFolderPath:
                 ConfirmDelete = False
@@ -119,7 +119,7 @@ class Tools:
                     shutil.rmtree(serverFolderPath) # But maybe can save someones computer
                 else:
                     print("WTF BRO? THIS IS ONLY 6e-1000000% POSSIBLE: No such file or directory")
-            
+
             return ConfirmDelete
 
 
@@ -153,13 +153,13 @@ class Tools:
                 invalid_message="Invailid values: '/', '\\', '|', ' '",
                 style=TerMCStyle
         ).execute()
-        
+
         usedNames = [
             int(element.split('-')[-1])
             for element in os.listdir(f"{self.HOME}/MinecraftServers")
             if element.startswith(f"{result}-") and element.split('-')[-1].isdigit()
         ]
-        
+
         if usedNames:
             nextNumber = max(usedNames, default=0) + 1
 
@@ -169,7 +169,7 @@ class Tools:
             nextNumber = max(usedNames, default=0) + 1
 
             result = f"{result}-{nextNumber}"
-        
+
         return f"{self.HOME}/MinecraftServers/{result}/"
 
 
@@ -277,7 +277,7 @@ class ServersEntropy:
     def DowloadJar(self, dowloadUrl, path, fileName, version): # Download a server jar
         with yaspin(text=f"[ Downloading Minecraft {version} ]") as sp:
             request = urllib.request.Request(dowloadUrl, headers=self.UserAgent)
-            with urllib.request.urlopen(request) as response, open(path + fileName, "wb") as outFile: 
+            with urllib.request.urlopen(request) as response, open(path + fileName, "wb") as outFile:
                 outFile.write(response.read()) # I am a nester 😐
 
 
@@ -333,7 +333,7 @@ class ServersEntropy:
     def GetFabricVer(self):
         request = urllib.request.Request("https://meta.fabricmc.net/v2/versions",
                                          headers=self.UserAgent)
-        
+
         with urllib.request.urlopen(request) as response:
             versions = loads(response.read())["game"]
 
@@ -349,10 +349,10 @@ class ServersEntropy:
     def GetFabricLoader(self, ver):
         request = urllib.request.Request(f"https://meta.fabricmc.net/v2/versions/loader/{ver}",
                                          headers=self.UserAgent)
-        
+
         with urllib.request.urlopen(request) as response:
             loaders = loads(response.read())
-        
+
         loadersList = []
         for loaderVerRaw in loaders:
             loaderVer = loaderVerRaw["loader"]["version"]
@@ -366,10 +366,10 @@ class ServersEntropy:
     def GetPaperVer(self):
         request = urllib.request.Request("https://api.papermc.io/v2/projects/paper/",
                                          headers=self.UserAgent)
-        
+
         with urllib.request.urlopen(request) as response:
             versions = loads(response.read())["versions"]
-        
+
         listVer = []
 
         for versionInfo in versions:
@@ -383,7 +383,7 @@ class ServersEntropy:
     def GetPaperBuild(self, ver):
         request = urllib.request.Request(f"https://api.papermc.io/v2/projects/paper/versions/{ver}/builds/",
                                          headers=self.UserAgent)
-        
+
         with urllib.request.urlopen(request) as response:
             builds = loads(response.read())["builds"]
 
@@ -399,7 +399,7 @@ class ServersEntropy:
     def GetBTAVer(self):
         request = urllib.request.Request("https://api.github.com/repos/Better-than-Adventure/bta-download-repo/tags",
                                          headers=self.UserAgent)
-        
+
         with urllib.request.urlopen(request) as response:
             versions = loads(response.read())
 
@@ -415,7 +415,7 @@ class ServersEntropy:
         for releases in verList:
             request = urllib.request.Request(f"https://api.github.com/repos/Better-than-Adventure/bta-download-repo/releases/tags/{releases}",
                                          headers=self.UserAgent)
-        
+
             with urllib.request.urlopen(request) as response:
                 releasesList = loads(response.read())
 
@@ -482,11 +482,11 @@ class ServersEntropy:
 
         request = urllib.request.Request(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{Build}/",
                                          headers=self.UserAgent)
-        
+
         with urllib.request.urlopen(request) as response:
             Download = loads(response.read())["downloads"]["application"]["name"]
 
-        self.DowloadJar(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{Build}/downloads/{Download}", 
+        self.DowloadJar(f"https://api.papermc.io/v2/projects/paper/versions/{Persion}/builds/{Build}/downloads/{Download}",
                         FolderPath, "paper.jar", Persion)
 
 
@@ -526,7 +526,7 @@ class MethodSelections:
 
 
     def CreateMethod(self): # Creates a new server
-        try: 
+        try:
             Folder = self.Tl.Folder()
             self.CustomBars(f"Starting the setup of {self.GetNormPath(Folder)}")
             Ram = self.Tl.Ram()
@@ -542,7 +542,7 @@ class MethodSelections:
             ).execute()
         except KeyboardInterrupt:
             self.CustomBars(f"Operation interrumped by the user", colorCode="160")
-            return 
+            return
 
         try:
             action = Server
@@ -552,7 +552,7 @@ class MethodSelections:
             if os.path.isdir(Folder):
                 shutil.rmtree(Folder)
             return
-        
+
         self.CustomBars(f"{self.GetNormPath(Folder)} set up done!")
 
 
@@ -593,7 +593,7 @@ class MethodSelections:
                                 Choice(value=[self.Tl.BannedIpsSettings, [Server, serverFilenames]],
                                         name="Banned Players/IP Files"),
                                 Choice(value="whitelist.json", name="White List File"),
-                                Choice(value=[self.Tl.RemoveServer, Server], 
+                                Choice(value=[self.Tl.RemoveServer, Server],
                                         name=f"Remove {serverName}"),
                                 Separator("─" * (len(serverName) + 10)),
                                 Choice(value=None, name="Exit")
@@ -622,7 +622,7 @@ def Init():
     HOME = os.environ["HOME"]
     with open(f'{__file__[:-8]}MANIFIEST.json', 'r') as file:
         VERSION = load(file)["TerMCVersion"]
-        
+
     if not os.path.isdir(f"{HOME}/MinecraftServers"):
             os.mkdir(f"{HOME}/MinecraftServers")
 
@@ -633,16 +633,16 @@ def Init():
         MethodSelection = inquirer.select(
             message="What do you want to do?",
             choices=[
-                Choice(value=[MethodSel.CreateMethod, "Let's create your own server!"], 
+                Choice(value=[MethodSel.CreateMethod, "Let's create your own server!"],
                         name="Create New Server"),
-                Choice(value=[MethodSel.EditMethod, "Let's edit your servers!"], 
+                Choice(value=[MethodSel.EditMethod, "Let's edit your servers!"],
                         name="Edit Server"),
-                Choice(value=[MethodSel.StartMethod, "Let's start your server!"], 
+                Choice(value=[MethodSel.StartMethod, "Let's start your server!"],
                         name="Start Server"),
                 Separator("─" * 23),
                 Choice(value=None, name="Exit")
                 ],
-                
+
             style=TerMCStyle,
             mandatory=False,
             raise_keyboard_interrupt=False

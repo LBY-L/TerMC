@@ -1,6 +1,6 @@
 <p align="center"><a href="https://github.com/LBY-L/TerMC"><img src="https://github.com/user-attachments/assets/a90c8c78-f223-4922-90f8-c6cb5b049722" alt="Logo" height="450"/></a></p>
 
-<h3 align="center">A simple script to download and execute Minecraft servers 🎇</h3>
+<h3 align="center">🎇 A simple script to download and execute Minecraft servers 🎇</h3>
 
 
 ## Script dependences
@@ -9,7 +9,7 @@
 > ```bash
 > pkg install python3 python-pip openjdk-17
 > ```
-> IMPORTANT: In the case of Termux, there isn't Openjdk 21 so the 1.21, CAN'T RUN
+> ⚠️ IMPORTANT ⚠️ On Termux, there isn't an Openjdk 21 package so you CAN'T RUN the 1.21
 
 > Fedora/CentOS/OpenSUSE:
 > ```bash

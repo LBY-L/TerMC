@@ -64,24 +64,26 @@ class Tools:
             "mohist.jar": "Mohist",
             "imported.jar": "Imported Server"
         }
+        if serversNames != []: # Just don't waste compuer power
+            for files in serversNames:
+                serverFiles = os.listdir(f"{self.HOME}/MinecraftServers/{files}/")
+                JarFileNames = [] # If you imported a server with multiple jars this should be able to report the jar names
+                for Jar in serverFiles:
+                    if Jar.endswith(".jar"):
+                        JarFileNames.append(Jar)
+                try:
+                    if len(JarFileNames) > 1:
+                        serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
+                                            name=f"{files} -> Imported Server ({len(JarFileNames)} jars)"))
+                    else:
+                        serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
+                                        name=f"{files} -> {serversJars[JarFileNames[0]]}"))
+                except KeyError:
 
-        for files in serversNames:
-            serverFiles = os.listdir(f"{self.HOME}/MinecraftServers/{files}/")
-            JarFileNames = [] # If you imported a server with multiple jars this should be able to report the jar names
-            for Jar in serverFiles:
-                if Jar.endswith(".jar"):
-                    JarFileNames.append(Jar)
-            try:
-                if len(JarFileNames) > 1:
                     serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
-                                        name=f"{files} -> Imported Server ({len(JarFileNames)} jars)"))
-                else:
-                    serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
-                                    name=f"{files} -> {serversJars[JarFileNames[0]]}"))
-            except KeyError:
-
-                serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
-                                    name=f"{files} -> Corrupted, Please remove it!"))
+                                        name=f"{files} -> Corrupted, Please remove it!"))
+        else:
+            serversTypes.append(Separator("Nothing is here"))
 
         serversTypes.append(Separator("─" * len(title)))
         serversTypes.append(Choice(value=None, name="Exit"))

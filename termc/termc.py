@@ -74,7 +74,7 @@ class Tools:
             try:
                 if len(JarFileNames) > 1:
                     serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
-                                        name=f"{files} -> Imported Server ({len(JarFileNames)}) .1Jars"))
+                                        name=f"{files} -> Imported Server ({len(JarFileNames)} jars)"))
                 else:
                     serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
                                     name=f"{files} -> {serversJars[JarFileNames[0]]}"))

@@ -241,12 +241,13 @@ class Tools:
 
         if os.path.isfile(filePath):
             os.system(f"{self.EDITOR} {filePath}")
-        if not os.path.isfile(filePath):
-            fileName = self.GetNormPath(filePath)
-            newPath = filePath[:-len(fileName)] + serverFilenames[fileName]
-            os.system(f"{self.EDITOR} {newPath}")
         else:
-            print(f"  Seems that {self.GetNormPath(filePath)} has been not yet\n  created or has been deleted")
+            fileName = self.GetNormPath(filePath)
+            try:
+                newPath = filePath[:-len(fileName)] + serverFilenames[fileName]
+                os.system(f"{self.EDITOR} {newPath}")
+            except KeyError:
+                self.CenteredColorText(f"Seems that {self.GetNormPath(filePath)} has been not yet created or has been deleted", colorCode = "220")
 
 
     def BannedIpsSettings(self, serverPath) -> False:

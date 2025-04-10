@@ -9,13 +9,20 @@
 #    ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝
 # “MANKIND IS DEAD. BLOOD IS FUEL. HELL IS FULL.” - UltraKill
 
-import os, urllib.request, shutil
+import os
+import urllib.request
+import shutil
+import re
+import textwrap
 from InquirerPy import inquirer
 from InquirerPy import get_style
+import InquirerPy
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
+from InquirerPy.validator import PathValidator
 from psutil import virtual_memory as RamMemory
 from yaspin import yaspin
+from yaspin.core import Spinner
 from yaspin.spinners import Spinners
 from json import loads, load
 
@@ -54,16 +61,25 @@ class Tools:
             "bta.jar": "BTA",
             "paper.jar": "Paper",
             "server.jar": "Vanilla",
-            "mohist.jar": "Mohist"
+            "mohist.jar": "Mohist",
+            "imported.jar": "Imported Server"
         }
 
         for files in serversNames:
             serverFiles = os.listdir(f"{self.HOME}/MinecraftServers/{files}/")
-            JarFileName = next((Jar for Jar in serverFiles if Jar.endswith(".jar")), None)
+            JarFileNames = [] # If you imported a server with multiple jars this should be able to report the jar names
+            for Jar in serverFiles:
+                if Jar.endswith(".jar"):
+                    JarFileNames.append(Jar)
             try:
-                serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
-                                    name=f"{files} -> {serversJars[JarFileName]}"))
+                if len(JarFileNames) > 1:
+                    serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
+                                        name=f"{files} -> Imported Server ({len(JarFileNames)}) .1Jars"))
+                else:
+                    serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
+                                    name=f"{files} -> {serversJars[JarFileNames[0]]}"))
             except KeyError:
+
                 serversTypes.append(Choice(value=f"{self.HOME}/MinecraftServers/{files}/",
                                     name=f"{files} -> Corrupted, Please remove it!"))
 
@@ -77,7 +93,7 @@ class Tools:
                                 mandatory=False,
                                 raise_keyboard_interrupt=False
                                 ).execute()
-        if Server == None:
+        if Server is None:
             return (Server, "")
         else:
             return (Server, self.GetNormPath(Server))
@@ -86,6 +102,14 @@ class Tools:
     def GetNormPath(self, path=""):
         return os.path.basename(os.path.normpath(path))
 
+
+    def CenteredColorText(self, text="", colorCode="155"):
+        color = f"\x1b[38;5;{colorCode}m"
+        width, _ = os.get_terminal_size()
+        newText = ""
+        for i in textwrap.wrap(text, width):
+            newText += i.center(width) + "\n"
+        print(f"{color}{newText}\x1b[0m", end="", flush=True)
 
     def CustomBars(self, text="", colorCode="155"): # Create a decorative bar with a title
         color = f"\x1b[38;5;{colorCode}m"
@@ -114,11 +138,11 @@ class Tools:
                     raise_keyboard_interrupt=False
                 ).execute()
 
-            if serverFolderPath and ConfirmDelete == True:
+            if serverFolderPath and ConfirmDelete:
                 if os.path.isdir(serverFolderPath): # A very improbable edge case
                     shutil.rmtree(serverFolderPath) # But maybe can save someones computer
                 else:
-                    print("WTF BRO? THIS IS ONLY 6e-1000000% POSSIBLE: No such file or directory")
+                    self.CenteredColorText("WTF BRO? THIS IS ONLY 6e-1000000% POSSIBLE: No such file or directory", colorCode="51")
 
             return ConfirmDelete
 
@@ -204,20 +228,26 @@ class Tools:
             else:
                 file.write(f"java -Xms{Ram} -Xmx{Ram} -jar {jar} nogui")
 
-    def OpenWith(self, filePath, serverFilenames):
-        fileName = self.GetNormPath(filePath)
-        newPath = filePath[:-len(fileName)] + serverFilenames[fileName]
+    def OpenWith(self, filePath):
+        serverFilenames = {
+            "ops.json": "ops.txt",
+            "banned-players.json": "banned-players.txt",
+            "banned-ips.json": "banned-ips.txt",
+            "whitelist.json": "white-list.txt",
+            "server.properties": "server.properties"
+        }
+
         if os.path.isfile(filePath):
             os.system(f"{self.EDITOR} {filePath}")
-        elif os.path.isfile(newPath):
+        if not os.path.isfile(filePath):
+            fileName = self.GetNormPath(filePath)
+            newPath = filePath[:-len(fileName)] + serverFilenames[fileName]
             os.system(f"{self.EDITOR} {newPath}")
         else:
             print(f"  Seems that {self.GetNormPath(filePath)} has been not yet\n  created or has been deleted")
 
 
-    def BannedIpsSettings(self, serverConf=[]) -> False:
-            serverPath = serverConf[0]
-            serverFilenames = serverConf[1]
+    def BannedIpsSettings(self, serverPath) -> False:
             BannedFile = ""
             BannedFile = inquirer.select(
                 message="Select which one to open",
@@ -229,7 +259,7 @@ class Tools:
                 mandatory=False,
                 raise_keyboard_interrupt=False
                 ).execute()
-            self.OpenWith(serverPath + BannedFile, serverFilenames)
+            self.OpenWith(serverPath + BannedFile)
 
 
     def printLogo(self):
@@ -275,7 +305,7 @@ class ServersEntropy:
         self.UserAgent = {'User-Agent': 'Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion'}
 
     def DowloadJar(self, dowloadUrl, path, fileName, version): # Download a server jar
-        with yaspin(text=f"[ Downloading Minecraft {version} ]") as sp:
+        with yaspin(text=f"[ Downloading Minecraft {version} ]"):
             request = urllib.request.Request(dowloadUrl, headers=self.UserAgent)
             with urllib.request.urlopen(request) as response, open(path + fileName, "wb") as outFile:
                 outFile.write(response.read()) # I am a nester 😐
@@ -290,7 +320,8 @@ class ServersEntropy:
             versions = loads(response.read())["versions"]
 
         outputVersions = list(reversed(versions))
-        outputVersions.remove("1.7.10"); outputVersions.remove("1.20") # <- These are unmainteined
+        outputVersions.remove("1.7.10")
+        outputVersions.remove("1.20") # <- These are unmainteined
 
         return outputVersions
 
@@ -339,7 +370,7 @@ class ServersEntropy:
 
         listVer = []
 
-        for versionInfo in filter(lambda x: x["stable"] == True, versions):
+        for versionInfo in filter(lambda x: x["stable"], versions):
             listVer.append(versionInfo["version"])
 
         return listVer
@@ -505,7 +536,7 @@ class ServersEntropy:
 
         self.SetupFolder(jar="mohist.jar", Ram=RamAllocation, Folder=FolderPath)
 
-        with yaspin(text=f"[ Downloading Minecraft {Mersion} ]") as sp:
+        with yaspin(text=f"[ Downloading Minecraft {Mersion} ]"):
             self.DowloadJar(Builds[Build], FolderPath, "mohist.jar", Mersion)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -524,6 +555,70 @@ class MethodSelections:
         self.SelectServer = self.Tl.SelectServer
         self.CustomBars = self.Tl.CustomBars
 
+    def ImportServer(self):
+        HOME = os.environ["HOME"]
+        try:
+            self.Tl.CenteredColorText("Attention this process will change the server.jar name and the start.sh name!", colorCode="220")
+            startPath = inquirer.filepath(
+                message="Enter the server path of your run file:",
+                default=f"{HOME}/",
+                validate=PathValidator(is_file=True, message="You need to specify a run file!"),
+                style=TerMCStyle
+            ).execute()
+            if startPath == f"{HOME}/":
+                return
+        except KeyboardInterrupt:
+            self.CustomBars("Operation interrumped by the user", colorCode="160")
+            return
+
+        try:
+            self.CustomBars("Asking a name for compatibility reasons")
+            serverNewName = self.Tl.Folder()
+            serverFolder = startPath[:-len(self.GetNormPath(startPath))]
+        except KeyboardInterrupt:
+            self.CustomBars("Operation interrumped by the user", colorCode="160")
+            return
+
+        try:
+            with yaspin(spinner=Spinners.growHorizontal, text=f"[ {self.GetNormPath(serverFolder)} -> ~/MinecraftServers/{self.GetNormPath(serverNewName)} ]"):
+                shutil.copytree(serverFolder, serverNewName)
+                shutil.move(f"{serverNewName}{self.GetNormPath(startPath)}", f"{serverNewName}run.sh")
+        except KeyboardInterrupt:
+            self.CustomBars("Operation interrumped, Undoing changes", colorCode="160")
+            if os.path.isdir(serverNewName):
+                shutil.rmtree(serverNewName)
+            return
+
+        scriptRoute = f"{serverNewName}run.sh"
+        newJarName = "imported.jar"
+        with open(scriptRoute, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        pattern = re.compile(r"(java\s+[^&|;\n]*?-jar\s+)([^\s&|;\n]+)", re.IGNORECASE)
+        hasChanged = False
+
+        oldJarName = ""
+        for i, line in enumerate(lines):
+            coincidence = pattern.search(line)
+            if coincidence:
+                oldJarName = coincidence.group(2)
+                # Reemplaza solo el .jar, mantiene el resto de la lu00ednea intacto
+                newLine = pattern.sub(rf"\1{newJarName}", line)
+                lines[i] = newLine
+                hasChanged = True
+
+        if hasChanged:
+            oldJarPath = f"{serverNewName}{self.GetNormPath(oldJarName)}"
+            print(oldJarPath)
+            if os.path.isfile(oldJarPath):
+                shutil.move(oldJarPath, f"{serverNewName}imported.jar")
+            with open(scriptRoute, "w", encoding="utf-8") as f:
+                f.writelines(lines)
+            self.Tl.CenteredColorText(f"!+ Changed {self.GetNormPath(oldJarPath)} -> imported.jar +!")
+            self.Tl.CenteredColorText(f"!+ Changed {self.GetNormPath(startPath)} -> run.sh +!" )
+        else:
+            self.Tl.CenteredColorText("We couldn't change the server name, has been alredy modified or start.sh is not valid", colorCode="220")
+
 
     def CreateMethod(self): # Creates a new server
         try:
@@ -541,14 +636,14 @@ class MethodSelections:
                 style=TerMCStyle,
             ).execute()
         except KeyboardInterrupt:
-            self.CustomBars(f"Operation interrumped by the user", colorCode="160")
+            self.CustomBars("Operation interrumped by the user", colorCode="160")
             return
 
         try:
             action = Server
             action(RamAllocation=Ram, FolderPath=Folder)
         except KeyboardInterrupt:
-            self.CustomBars(f"Operation interrumped, undoing changes", colorCode="160")
+            self.CustomBars("Operation interrumped, undoing changes", colorCode="160")
             if os.path.isdir(Folder):
                 shutil.rmtree(Folder)
             return
@@ -563,24 +658,18 @@ class MethodSelections:
             os.system("bash run.sh")
             self.CustomBars(f"{serverName} has been shut down")
         else:
-            self.CustomBars(f"Good bye!")
+            self.CustomBars("Good bye!")
 
 
     def EditMethod(self): # Edit servers, the most large method
         Server, serverName = self.SelectServer("Select a server to edit")
 
-        if Server == None:
+        if Server is None:
             self.CustomBars("Good bye!")
             return
 
-        serverFilenames = {
-            "ops.json": "ops.txt",
-            "banned-players.json": "banned-players.txt",
-            "banned-ips.json": "banned-ips.txt",
-            "whitelist.json": "white-list.txt",
-            "server.properties": "server.properties"
-        }
-
+        midSep = "─" * ((len(serverName) - 11 + 10) // 2)
+        mySep = "─" * (len(serverName) + 10)
         while True:
             Settings = None
             Settings = inquirer.select(
@@ -590,12 +679,11 @@ class MethodSelections:
                                 Choice(value="run.sh", name="Run Script"),
                                 Choice(value="eula.txt", name="EULA File"),
                                 Choice(value="ops.json", name="Ops File"),
-                                Choice(value=[self.Tl.BannedIpsSettings, [Server, serverFilenames]],
-                                        name="Banned Players/IP Files"),
+                                Choice(value=self.Tl.BannedIpsSettings, name="Banned Players/IP Files"),
                                 Choice(value="whitelist.json", name="White List File"),
-                                Choice(value=[self.Tl.RemoveServer, Server],
-                                        name=f"Remove {serverName}"),
-                                Separator("─" * (len(serverName) + 10)),
+                                Separator(midSep + " Risk Zone " + (len(mySep) - len(midSep) - 11 ) * "─"),
+                                Choice(value=self.Tl.RemoveServer, name=f"Remove {serverName}"),
+                                Separator(mySep),
                                 Choice(value=None, name="Exit")
                         ],
                         style=TerMCStyle,
@@ -603,16 +691,17 @@ class MethodSelections:
                         raise_keyboard_interrupt=False
                         ).execute()
 
-            if type(Settings) is list:
-                action, serverConf = Settings
-                breakIt = action(serverConf)
+            if callable(Settings):
+                callFunc = Settings
+                breakIt = callFunc(Server)
+
                 if breakIt:
                     break
-            elif Settings == None:
+            elif Settings is None:
                 self.CustomBars(f"Done editing {serverName}")
                 break
             else:
-                self.OpenWith(Server + Settings, serverFilenames)
+                self.OpenWith(Server + Settings)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -639,6 +728,7 @@ def Init():
                         name="Edit Server"),
                 Choice(value=[MethodSel.StartMethod, "Let's start your server!"],
                         name="Start Server"),
+                Choice(value=[MethodSel.ImportServer, "Let's import your server!"], name="Import server") ,
                 Separator("─" * 23),
                 Choice(value=None, name="Exit")
                 ],

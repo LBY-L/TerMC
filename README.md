@@ -1,5 +1,5 @@
 <p align="center"><img src="https://github.com/user-attachments/assets/d1e83521-796f-4d0d-9ec4-9d4e16dee37b" alt="Logo"/></p>
-<p align="center"><a href="https://github.com/LBY-L/TerMC"><img src="https://github.com/user-attachments/assets/a90c8c78-f223-4922-90f8-c6cb5b049722" alt="Logo" height="450", width="450"/></a></p>
+<p align="center"><a href="https://github.com/LBY-L/TerMC"><img src="https://github.com/user-attachments/assets/a90c8c78-f223-4922-90f8-c6cb5b049722" alt="Logo" height="300", width="300"/></a></p>
 
 <h3 align="center">🎇 A simple script to download and execute Minecraft servers 🎇</h3>
 

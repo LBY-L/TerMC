@@ -12,6 +12,6 @@ setup(
         "psutil"
     ],
     keywords=["cli", "tui"],
-    entry_points={"console_scripts": "termc = termc.termc:Init"},
+    entry_points={"console_scripts": "termc = termc.termc:main"},
     python_requires=">=3.10",
 )

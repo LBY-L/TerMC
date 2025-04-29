@@ -13,5 +13,5 @@ setup(
     ],
     keywords=["cli", "tui"],
     entry_points={"console_scripts": "termc = termc.termc:Init"},
-    python_requires=">=3.13",
+    python_requires=">=3.10",
 )

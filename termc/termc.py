@@ -32,6 +32,8 @@ from json import loads, load
 global SHELL, VERSION, HOME
 SHELL = shutil.which("bash")
 VERSION = "v0.9.2"
+if not os.path.isdir(f"{os.environ["HOME"]}/MinecraftServers/"):
+    os.mkdir(f"{os.environ["HOME"]}/MinecraftServers/")
 HOME = f"{os.environ["HOME"]}/MinecraftServers/"
 
 # Translations -- maybe idk

@@ -1,0 +1,15 @@
+[project]
+name = "termc"
+version = "0.9.3"
+authors = [{ name = "LBY_L" }]
+description = "A simple script to download and execute Minecraft servers"
+readme = "README.md"
+requires-python = ">=3.11"
+entry-points = {}
+dependencies = ["inquirerpy>=0.3.4", "psutil>=7.0.0", "yaspin>=3.1.0"]
+[project.scripts]
+termc = "termc.termc:main"
+
+[tool.uv]
+package = true
+environments = ["sys_platform == 'darwin'", "sys_platform == 'linux'"]

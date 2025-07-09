@@ -10,9 +10,6 @@
 # “MANKIND IS DEAD. BLOOD IS FUEL. HELL IS FULL.” - UltraKill
 
 import os
-from subprocess import call as RunCommand
-from prompt_toolkit.layout.containers import ColorColumn
-from prompt_toolkit.styles.style import Style
 import urllib.request
 import shutil
 import re
@@ -28,70 +25,28 @@ from yaspin import yaspin
 from yaspin.core import Spinner
 from yaspin.spinners import Spinners
 from json import loads, load
+from dialoges import *
 
 global SHELL, VERSION, HOME
 SHELL = shutil.which("bash")
-VERSION = "v0.9.2"
-if not os.path.isdir(f"{os.environ["HOME"]}/MinecraftServers/"):
-    os.mkdir(f"{os.environ["HOME"]}/MinecraftServers/")
-HOME = f"{os.environ["HOME"]}/MinecraftServers/"
+VERSION = "v0.9.3"
+if not os.path.isdir(f"{os.environ['HOME']}/MinecraftServers/"):
+    os.mkdir(f"{os.environ['HOME']}/MinecraftServers/")
+HOME = f"{os.environ['HOME']}/MinecraftServers/"
 
-# Translations -- maybe idk
-AppParameters = ("A simple script to download and execute Minecraft servers", "Changes the default TerMC directory", "Changes the server command for running servers", "Ignores the config in .config/termc-config.json")
-KeyInterruptMsg = "Operation interrupted"
-SysErrorMsg = ("System Error", "End of System Error")
-KeyInterruptMsgUndo = "Operation interrupted, undoing changes"
-ExitOption = Choice(name="Exit", value=None)
-DefaultExitMsg = "Going back"
-MandatoryMessage = "You can't skip this!"
-settingsDir = lambda path="": f"Using: {path}"
-selectImpServerText = "Imported Server"
-selectNoServerMsg = "Nothing is here"
-selectErrServer = "Corrupted"
-dwmanagerSpinners = ("[ Getting Available Versions ]", lambda version="": f"[ Downloading Minecraft {version} ]")
-createChangesText = lambda mc=("", "", "", ""): f"""- CHANGES -
-Folder Name: {mc[0]}
-Minecraft Version: {mc[1]}
-Minecraft Ram: {mc[2]}
-Minecraft Jar Name: {mc[3]}"""
-createBars = ("Starting the setup", lambda serverName="": f"Succesfully created {serverName}")
-startTxts = ("Select a server to run", lambda serverName="": f"{serverName} has been shut down")
-createRamTitle = "How many GB of ram you'll use?"
-createFolderTitle = "Name:"
-createInvalidFolderVal = "Invailid values: '/', '\\', '|', ' '"
-createServerTypeTitle = "What server type you'll use?"
-createEulaTitle = "Do you want to accept the Minecraft EULA?"
-createPaperFlags = "-DPaper.IgnoreJavaVersion=true \
--XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 \
--XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC \
--XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 \
--XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 \
--XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 \
--XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 \
--XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 \
--Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true"
-editRemoveConfirm = (lambda name="": f"{name} removal has been halted", lambda name="": f"{name} has been deleted")
-editExitBar = lambda name="": f"Closing settings of {name}"
-editServerKey = (lambda name="": f"{name} Settings", "Risk Zone", lambda name="": f"Remove {name}", "Select a server to edit")
-editFilesNames = ("Run Script", "Server Properties", "Operators", "EULA", "Banned Players", "Banned IPs", "White List")
-editFileNotFound = lambda name="": f"Seems that {name} has been not yet created or has been deleted"
-importMsgs = ("Server import incomming!", "Enter the server path of your run file", "Not a valid file!")
-importNoName = "NoNameSupplied"
-importChanges = lambda changes=("", ""): f"""- CHANGES -
-Start File: {changes[0]}
-Jar File: {changes[1]}"""
-mainmenuModuleNames = ("Create Server", "Start Server", "Edit Server", "Import an Existing Server")
-mainmenuTitle = "What do you want to do?"
-mainmenuBars = (f"Welcome to TerMC {VERSION}", "See you later!")
-TerMCStyle = get_style({
-    "pointer": "#5fd700",
-    "marker": "#5fd700",
-    "fuzzy_prompt": "#5fd700",
-    "answer": "#5fd700",
-    "questionmark": "#84f82e",
-    "answermark": "#84f82e",
-    "fuzzy_match": "#9edf5e"
-}, style_override=False)
+
+TerMCStyle = get_style(
+    {
+        "pointer": "#5fd700",
+        "marker": "#5fd700",
+        "fuzzy_prompt": "#5fd700",
+        "answer": "#5fd700",
+        "questionmark": "#84f82e",
+        "answermark": "#84f82e",
+        "fuzzy_match": "#9edf5e",
+    },
+    style_override=False,
+)
 
 creeperLogo = (
     ("\x1b[38;5;76m████    ████\x1b[0m"),
@@ -100,7 +55,7 @@ creeperLogo = (
     ("\x1b[38;5;76m  ████████  \x1b[0m"),
     ("\x1b[38;5;76m  ████████  \x1b[0m"),
     ("\x1b[38;5;76m  ██    ██  \x1b[0m"),
-    ("                                ")
+    ("                                "),
 )
 
 creeperLogoSleep = (
@@ -112,12 +67,12 @@ creeperLogoSleep = (
     ("\x1b[38;5;76m  ████████  \x1b[0m"),
     ("\x1b[38;5;76m  ████████  \x1b[0m"),
     ("\x1b[38;5;76m  ██    ██  \x1b[0m"),
-    ("                                ")
+    ("                                "),
 )
 
 
 class TextFormatting:
-    def __init__(self, colorCode = None):
+    def __init__(self, colorCode=None):
         self.RESET = "\x1b[0m"
         if colorCode is None:
             self.colorCode = 155
@@ -127,15 +82,17 @@ class TextFormatting:
     def PrintLogos(self, logo: tuple = ()):
         width, _ = os.get_terminal_size()
         LineLen = len(logo[0][-1]) + 10
-        spaceNeeded = ( (width - (LineLen)) // 2 ) * " "
+        spaceNeeded = ((width - (LineLen)) // 2) * " "
         print(spaceNeeded + (f"\n{spaceNeeded}".join(logo)), flush=True)
 
-    def CustomBars(self, text: str = "", _colorCode=None): # Create a decorative bar with a title
+    def CustomBars(
+        self, text: str = "", _colorCode=None
+    ):  # Create a decorative bar with a title
         color = f"\x1b[38;5;{self.colorCode}m"
-        colorSp = f"\x1b[38;5;240m"
+        colorSp = "\x1b[38;5;240m"
         if _colorCode is not None:
             color = f"\x1b[38;5;{_colorCode}m"
-            colorSp = f"\x1b[38;5;240m"
+            colorSp = "\x1b[38;5;240m"
         width, _ = os.get_terminal_size()
         txt = f" {text} "
         centerTxt = txt.center(width, "/")
@@ -161,7 +118,8 @@ class TextFormatting:
         newText += f"{borderColor}└{'─' * innerWidth}┘{self.RESET}"
         print(newText, flush=True)
 
-class DowloadManager: ## This manages all the request, just to make me this easier
+
+class DowloadManager:  ## This manages all the request, just to make me this easier
     def __init__(self):
         self.downloadText = ""
         self.serversFunctions = {
@@ -171,12 +129,15 @@ class DowloadManager: ## This manages all the request, just to make me this easi
             "server.jar": self.GetVanilla,
             # "mohist.jar": "Mohist", Not yet implemented
         }
-        self.UserAgent = {'User-Agent': 'Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion'}
+        self.UserAgent = {
+            "User-Agent": "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion"
+        }
 
     @yaspin(Spinners.growHorizontal, dwmanagerSpinners[0])
     def GetFabric(self):
-        request = urllib.request.Request("https://meta.fabricmc.net/v2/versions",
-                                            headers=self.UserAgent)
+        request = urllib.request.Request(
+            "https://meta.fabricmc.net/v2/versions", headers=self.UserAgent
+        )
 
         with urllib.request.urlopen(request) as response:
             versions = loads(response.read())["game"]
@@ -190,8 +151,10 @@ class DowloadManager: ## This manages all the request, just to make me this easi
 
     @yaspin(Spinners.growHorizontal, dwmanagerSpinners[0])
     def GetBTA(self):
-        request = urllib.request.Request("https://downloads.betterthanadventure.net/bta-server/release/versions.json",
-                                        headers=self.UserAgent)
+        request = urllib.request.Request(
+            "https://downloads.betterthanadventure.net/bta-server/release/versions.json",
+            headers=self.UserAgent,
+        )
 
         with urllib.request.urlopen(request) as response:
             versions = response.read()
@@ -207,7 +170,9 @@ class DowloadManager: ## This manages all the request, just to make me this easi
         versionsJson = loads(newVersion)["versions"]
         versionsDictUrl = {}
         for release in reversed(versionsJson):
-            versionsDictUrl[release] = f"https://downloads.betterthanadventure.net/bta-server/release/{release}/server.jar"
+            versionsDictUrl[release] = (
+                f"https://downloads.betterthanadventure.net/bta-server/release/{release}/server.jar"
+            )
             if release == "v1.7.4_01_1":
                 break
 
@@ -215,45 +180,53 @@ class DowloadManager: ## This manages all the request, just to make me this easi
 
     @yaspin(Spinners.growHorizontal, dwmanagerSpinners[0])
     def GetPaper(self):
-            request = urllib.request.Request("https://api.papermc.io/v2/projects/paper/",
-                                            headers=self.UserAgent)
+        request = urllib.request.Request(
+            "https://api.papermc.io/v2/projects/paper/", headers=self.UserAgent
+        )
 
-            with urllib.request.urlopen(request) as response:
-                versions = loads(response.read())["versions"]
+        with urllib.request.urlopen(request) as response:
+            versions = loads(response.read())["versions"]
 
-            listVer = []
+        listVer = []
 
-            for versionInfo in versions:
-                if versionInfo != "1.13-pre7":
-                    listVer.append(versionInfo)
+        for versionInfo in versions:
+            if versionInfo != "1.13-pre7":
+                listVer.append(versionInfo)
 
-            return list(reversed(listVer))
+        return list(reversed(listVer))
 
     @yaspin(Spinners.growHorizontal, dwmanagerSpinners[0])
     def GetVanilla(self):
-            request = urllib.request.Request("https://launchermeta.mojang.com/mc/game/version_manifest.json",
-                                                headers=self.UserAgent)
+        request = urllib.request.Request(
+            "https://launchermeta.mojang.com/mc/game/version_manifest.json",
+            headers=self.UserAgent,
+        )
 
-            with urllib.request.urlopen(request) as response:
-                versions = loads(response.read())["versions"]
+        with urllib.request.urlopen(request) as response:
+            versions = loads(response.read())["versions"]
 
-            # I don't set the url to a variable because the minecraft servers are very slow
-            versionsDict = {}
+        # I don't set the url to a variable because the minecraft servers are very slow
+        versionsDict = {}
 
-            for versionInfo in filter(lambda x: x["type"] == "release", versions):
-                url = loads(urllib.request.urlopen(versionInfo["url"]).read())["downloads"]["server"]["url"]
-                release = versionInfo["id"]
-                versionsDict[release] = url
-                if release == "1.2.5": # The servers are good until this versions
-                    break
+        for versionInfo in filter(lambda x: x["type"] == "release", versions):
+            url = loads(urllib.request.urlopen(versionInfo["url"]).read())["downloads"][
+                "server"
+            ]["url"]
+            release = versionInfo["id"]
+            versionsDict[release] = url
+            if release == "1.2.5":  # The servers are good until this versions
+                break
 
-            return versionsDict
+        return versionsDict
 
-    def DownloadJar(self, downloadUrl=None, path="", fileName="server.jar", version=""): # Download a server jar
+    def DownloadJar(
+        self, downloadUrl=None, path="", fileName="server.jar", version=""
+    ):  # Download a server jar
         if fileName == "paper.jar":
-            buildRoute = f"https://api.papermc.io/v2/projects/paper/versions/{version}/builds/"
-            request = urllib.request.Request(buildRoute,
-                                             headers=self.UserAgent)
+            buildRoute = (
+                f"https://api.papermc.io/v2/projects/paper/versions/{version}/builds/"
+            )
+            request = urllib.request.Request(buildRoute, headers=self.UserAgent)
             with urllib.request.urlopen(request) as response:
                 build = loads(response.read())["builds"][-1]
             buildName = build["build"]
@@ -274,8 +247,12 @@ class DowloadManager: ## This manages all the request, just to make me this easi
         if downloadUrl is not None:
             with yaspin(text=dwmanagerSpinners[1](version)):
                 request = urllib.request.Request(downloadUrl, headers=self.UserAgent)
-                with urllib.request.urlopen(request) as response, open(path + fileName, "wb") as outFile:
-                    outFile.write(response.read()) # I am a nester 😐
+                with (
+                    urllib.request.urlopen(request) as response,
+                    open(path + fileName, "wb") as outFile,
+                ):
+                    outFile.write(response.read())  # I am a nester 😐
+
 
 class ImportServer:
     def __init__(self):
@@ -290,16 +267,22 @@ class ImportServer:
         self._newServerPath = None
         self._imJarName = None
 
-    def DeterminateNewName(self): # Prevent ilegal names like "he\lo" or "he|lo"
+    def DeterminateNewName(self):  # Prevent ilegal names like "he\lo" or "he|lo"
         if self._imFolderName is None:
             return importNoName
-                                                         # I dont want hidden folders
-        newName = self._imFolderName.replace("/", "").replace("\\", "").replace("|", "").replace(".", "").replace(" ", "")
+            # I dont want hidden folders
+        newName = (
+            self._imFolderName.replace("/", "")
+            .replace("\\", "")
+            .replace("|", "")
+            .replace(".", "")
+            .replace(" ", "")
+        )
         # Copy and pasted CreateServer.Folder
         usedNames = [
-            int(element.split('-')[-1])
+            int(element.split("-")[-1])
             for element in os.listdir(HOME)
-            if element.startswith(f"{newName}-") and element.split('-')[-1].isdigit()
+            if element.startswith(f"{newName}-") and element.split("-")[-1].isdigit()
         ]
 
         if usedNames:
@@ -351,11 +334,10 @@ class ImportServer:
         with open(scriptRoute, "w", encoding="utf-8") as f:
             f.writelines(lines)
 
-
     def ImportServer(self):
         self.barExit.CustomBars(importMsgs[0])
         self.tx.CenteredColorText(importMsgs[1])
-        try: # It's a common error to get to this option
+        try:  # It's a common error to get to this option
             startPath = self.tl.FilePathTERMC(
                 message="run.sh/start.sh:",
                 default=self.userHOME,
@@ -365,15 +347,21 @@ class ImportServer:
         except KeyboardInterrupt:
             self.txE.CustomBars(KeyInterruptMsg)
             return
-        self._imServerPath = startPath[:-len(self.tl.GetPathFileName(startPath))]
+        self._imServerPath = startPath[: -len(self.tl.GetPathFileName(startPath))]
         self._imFolderName = self.tl.GetPathFileName(self._imServerPath)
         self.DeterminateNewName()
         self._newServerPath = f"{HOME}{self._newFolderName}/"
 
         try:
-            with yaspin(spinner=Spinners.growHorizontal, text=f"[ {self._imFolderName} -> {HOME}{self._newFolderName} ]"):
+            with yaspin(
+                spinner=Spinners.growHorizontal,
+                text=f"[ {self._imFolderName} -> {HOME}{self._newFolderName} ]",
+            ):
                 shutil.copytree(self._imServerPath, self._newServerPath)
-                shutil.move(f"{self._newServerPath}{self.tl.GetPathFileName(startPath)}", f"{self._newServerPath}run.sh")
+                shutil.move(
+                    f"{self._newServerPath}{self.tl.GetPathFileName(startPath)}",
+                    f"{self._newServerPath}run.sh",
+                )
         except KeyboardInterrupt:
             self.txE.CustomBars(KeyInterruptMsgUndo)
             if os.path.isdir(self._newServerPath):
@@ -381,7 +369,15 @@ class ImportServer:
             return
 
         self.ChangeFiles()
-        self.tx.CenteredColorText(importChanges((f"{self.tl.GetPathFileName(startPath)} -> run.sh", f"{self._imJarName} -> imported.jar")), _colorCode="7")
+        self.tx.CenteredColorText(
+            importChanges(
+                (
+                    f"{self.tl.GetPathFileName(startPath)} -> run.sh",
+                    f"{self._imJarName} -> imported.jar",
+                )
+            ),
+            _colorCode="7",
+        )
 
 
 class EditServer:
@@ -408,50 +404,68 @@ class EditServer:
         self._positionServer = 0
 
     def OpenWith(self, _positionServer):
-        serverPath1 = self._folderPath + list(self.serverFilenames.keys())[self._positionServer]
-        serverPath2 = self._folderPath + list(self.serverFilenames.values())[self._positionServer]
+        serverPath1 = (
+            self._folderPath + list(self.serverFilenames.keys())[self._positionServer]
+        )
+        serverPath2 = (
+            self._folderPath + list(self.serverFilenames.values())[self._positionServer]
+        )
 
         if os.path.isfile(serverPath1):
             os.system(f"{self.tl.EDITOR} {serverPath1}")
         elif os.path.isfile(serverPath2):
             os.system(f"{self.tl.EDITOR} {serverPath2}")
         else:
-            self.txE.CenteredColorText(editFileNotFound(self.tl.GetPathFileName(self._folderPath)))
+            self.txE.CenteredColorText(
+                editFileNotFound(self.tl.GetPathFileName(self._folderPath))
+            )
 
     def GoUP(self, up=1):
         print(f"\x1b[{up}A", flush=True, end="")
         print("\x1b[2K", flush=True, end="")
 
     def RemoveServer(self):
-            style = get_style(style={"answermark": "#9c061d",
-                                        "questionmark": "#9c061d",
-                                        "question": "#f7966d",
-                                        "answered_question": "#f7966d",
-                                        "answer": "#9c061d"}, style_override=False)
-            ConfirmDelete = False
-            ConfirmDelete = inquirer.confirm(
-                message=f"Do you want to remove {self.tl.GetPathFileName(self._folderPath)}",
-                style=style,
-                qmark='!',
-                amark='!',
-                default=False,
-                mandatory=False,
-                raise_keyboard_interrupt=False
-            ).execute()
+        style = get_style(
+            style={
+                "answermark": "#9c061d",
+                "questionmark": "#9c061d",
+                "question": "#f7966d",
+                "answered_question": "#f7966d",
+                "answer": "#9c061d",
+            },
+            style_override=False,
+        )
+        ConfirmDelete = False
+        ConfirmDelete = inquirer.confirm(
+            message=f"Do you want to remove {self.tl.GetPathFileName(self._folderPath)}",
+            style=style,
+            qmark="!",
+            amark="!",
+            default=False,
+            mandatory=False,
+            raise_keyboard_interrupt=False,
+        ).execute()
 
-            if ConfirmDelete:
-                if os.path.isdir(self._folderPath): # A very improbable edge case
-                    shutil.rmtree(self._folderPath) # But maybe can save someones computer
-                else:
-                    self.txE.CenteredColorText("WTF BRO? THIS IS ONLY 6e-1000000% POSSIBLE: No such file or directory", colorCode="51")
-                self.GoUP(2)
-                self.tx.CustomBars(editRemoveConfirm[1](self.tl.GetPathFileName(self._folderPath)))
-                return True
+        if ConfirmDelete:
+            if os.path.isdir(self._folderPath):  # A very improbable edge case
+                shutil.rmtree(self._folderPath)  # But maybe can save someones computer
             else:
-                self.GoUP(2)
-                self.txE.CustomBars(editRemoveConfirm[0](self.tl.GetPathFileName(self._folderPath)))
-                print("\n", flush=True, end="")
-                return False
+                self.txE.CenteredColorText(
+                    "WTF BRO? THIS IS ONLY 6e-1000000% POSSIBLE: No such file or directory",
+                    colorCode="51",
+                )
+            self.GoUP(2)
+            self.tx.CustomBars(
+                editRemoveConfirm[1](self.tl.GetPathFileName(self._folderPath))
+            )
+            return True
+        else:
+            self.GoUP(2)
+            self.txE.CustomBars(
+                editRemoveConfirm[0](self.tl.GetPathFileName(self._folderPath))
+            )
+            print("\n", flush=True, end="")
+            return False
 
     def EditServer(self):
         Server, serverName = self.tl.SelectServer(editServerKey[3])
@@ -460,8 +474,12 @@ class EditServer:
         else:
             self._folderPath = Server
         serverTitle = editServerKey[0](serverName)
-        self.optionNameFile.append(Separator(f" {editServerKey[1]} ".center(len(serverTitle), "─")))
-        self.optionNameFile.append(Choice(value="remove", name=editServerKey[2](serverName)))
+        self.optionNameFile.append(
+            Separator(f" {editServerKey[1]} ".center(len(serverTitle), "─"))
+        )
+        self.optionNameFile.append(
+            Choice(value="remove", name=editServerKey[2](serverName))
+        )
         self.optionNameFile.append(Separator("─" * len(serverTitle)))
         self.optionNameFile.append(ExitOption)
         while True:
@@ -470,7 +488,7 @@ class EditServer:
                 choices=self.optionNameFile,
                 mandatory=False,
                 default=None,
-                raise_keyboard_interrupt=False
+                raise_keyboard_interrupt=False,
             ).execute()
 
             if serverEditOptions == "remove":
@@ -487,6 +505,7 @@ class EditServer:
 
             self.GoUP()
 
+
 class StartServer:
     def __init__(self):
         self.tl = Tools()
@@ -498,22 +517,27 @@ class StartServer:
         Server, serverName = self.tl.SelectServer(startTxts[0])
         if serverName is not None:
             os.chdir(Server)
-            os.system(f"{SHELL} run.sh",)
+            os.system(
+                f"{SHELL} run.sh",
+            )
             print("\n", end="")
             self.barExit.CustomBars(startTxts[1](serverName))
 
+
 class CreateServer:
-    def __init__(self, ):
+    def __init__(
+        self,
+    ):
         self.dw = DowloadManager()
         self.tl = Tools()
         self.tx = TextFormatting()
         self.barExit = TextFormatting(colorCode=76)
         self.txE = TextFormatting(colorCode=160)
         serverTypesJars = {
-        "fabric.jar": "Fabric",
-        "bta.jar": "Better Than Adventure (BTA)",
-        "paper.jar": "Paper",
-        "server.jar": "Vanilla",
+            "fabric.jar": "Fabric",
+            "bta.jar": "Better Than Adventure (BTA)",
+            "paper.jar": "Paper",
+            "server.jar": "Vanilla",
         }
         self.optionsServerTypes = []
         for k, e in serverTypesJars.items():
@@ -540,16 +564,17 @@ class CreateServer:
             self.SetupServer()
         except KeyboardInterrupt:
             self.txE.CustomBars(KeyInterruptMsgUndo)
-            if os.path.isdir(f"{HOME}{self._folder}"): # A very improbable edge case
-                shutil.rmtree(f"{HOME}{self._folder}") # But maybe can save someones computer
+            if os.path.isdir(f"{HOME}{self._folder}"):  # A very improbable edge case
+                shutil.rmtree(
+                    f"{HOME}{self._folder}"
+                )  # But maybe can save someones computer
             return
 
         self.tx.CustomBars(createBars[1](str(self._folder)))
 
-
-    def Ram(self): # Returns the ram allocation, selected by the user
+    def Ram(self):  # Returns the ram allocation, selected by the user
         ramAllocation = []
-        for ramSymbol in range(1, (RamMemory().total//1000000000)-1):
+        for ramSymbol in range(1, (RamMemory().total // 1000000000) - 1):
             ramAllocation.append(f"{ramSymbol}G")
         if ramAllocation == []:
             ramAllocation = ["1G"]
@@ -558,11 +583,11 @@ class CreateServer:
             message=createRamTitle,
             choices=ramAllocation,
             raise_keyboard_interrupt=False,
-            mandatory=True
+            mandatory=True,
         ).execute()
         self._ramGB = RamSelection
 
-    def Folder(self): # Creates a folder for the server with a designed name
+    def Folder(self):  # Creates a folder for the server with a designed name
         def GValidator(result):
             if len(result) == 0:
                 return False
@@ -571,17 +596,17 @@ class CreateServer:
             return True
 
         result = self.tl.TextTERMC(
-                message=createFolderTitle,
-                validate=GValidator,
-                invalid_message=createInvalidFolderVal,
-                raise_keyboard_interrupt=False,
-                mandatory=True
+            message=createFolderTitle,
+            validate=GValidator,
+            invalid_message=createInvalidFolderVal,
+            raise_keyboard_interrupt=False,
+            mandatory=True,
         ).execute()
 
         usedNames = [
-            int(element.split('-')[-1])
+            int(element.split("-")[-1])
             for element in os.listdir(HOME)
-            if element.startswith(f"{result}-") and element.split('-')[-1].isdigit()
+            if element.startswith(f"{result}-") and element.split("-")[-1].isdigit()
         ]
 
         if usedNames:
@@ -594,9 +619,8 @@ class CreateServer:
         self._folder = f"{result}"
 
     def ServerTypeSelect(self):
-        jarName = self.tl.SelectionTERMC( # It's easy to get trapped in this option so exit now if you don't want this
-            message=createServerTypeTitle,
-            choices=self.optionsServerTypes
+        jarName = self.tl.SelectionTERMC(  # It's easy to get trapped in this option so exit now if you don't want this
+            message=createServerTypeTitle, choices=self.optionsServerTypes
         ).execute()
         function = self.dw.serversFunctions[str(jarName)]
         serverGet = function()
@@ -606,10 +630,12 @@ class CreateServer:
         else:
             Versions = serverGet
 
-        versionSelection = self.tl.FuzzyTERMC(mandatory=True,
+        versionSelection = self.tl.FuzzyTERMC(
+            mandatory=True,
             raise_keyboard_interrupt=False,
             message="What version you want?",
-            choices=Versions).execute()
+            choices=Versions,
+        ).execute()
 
         url = None
         if isinstance(serverGet, dict):
@@ -641,26 +667,32 @@ class CreateServer:
         # Detect if there is a value that is not set
         # This means that someone skip a step
 
-        #folder = self._folder
+        # folder = self._folder
         url = self._serverBasis[0]
         jarName = self._serverBasis[1]
         version = self._serverBasis[2]
         eula = self._flags[0]
         flags = self._flags[1]
 
-        self.tx.CenteredColorText(createChangesText((self._folder, version, self._ramGB, jarName)), _colorCode="7")
+        self.tx.CenteredColorText(
+            createChangesText((self._folder, version, self._ramGB, jarName)),
+            _colorCode="7",
+        )
 
         serverPath = f"{HOME}{self._folder}/"
 
-        os.mkdir(serverPath) # Creates the root dir of this server
+        os.mkdir(serverPath)  # Creates the root dir of this server
 
-        with open(f"{serverPath}eula.txt", "w") as file: # Write to the eula.txt file
+        with open(f"{serverPath}eula.txt", "w") as file:  # Write to the eula.txt file
             file.write(f"# Modified by TerMC\n{eula}")
 
         with open(f"{serverPath}run.sh", "w") as file:
-            file.write(f"\n# -- TerMC Run File -- \n{flags}") # Write to the run.sh file
+            file.write(
+                f"\n# -- TerMC Run File -- \n{flags}"
+            )  # Write to the run.sh file
 
         self.dw.DownloadJar(url, serverPath, jarName, version)
+
 
 class MainMenu:
     def __init__(self):
@@ -673,10 +705,10 @@ class MainMenu:
         ed = EditServer()
         ip = ImportServer()
         myModules = {
-           cr.CreateServer: f"{mainmenuModuleNames[0]}",
-           st.StartServer: f"{mainmenuModuleNames[1]}",
-           ed.EditServer: f"{mainmenuModuleNames[2]}",
-           ip.ImportServer: f"{mainmenuModuleNames[3]}"
+            cr.CreateServer: f"{mainmenuModuleNames[0]}",
+            st.StartServer: f"{mainmenuModuleNames[1]}",
+            ed.EditServer: f"{mainmenuModuleNames[2]}",
+            ip.ImportServer: f"{mainmenuModuleNames[3]}",
         }
         self.menuOptions = []
         for k, e in myModules.items():
@@ -686,19 +718,20 @@ class MainMenu:
     def MainMenu(self):
         menuOption = ""
         self.barExit.PrintLogos(creeperLogo)
-        self.barExit.CustomBars(mainmenuBars[0])
+        self.barExit.CustomBars(mainmenuBars(VERSION)[0])
         while menuOption is not None:
             menuOption = self.tl.SelectionTERMC(
                 message=mainmenuTitle,
                 choices=self.menuOptions,
                 raise_keyboard_interrupt=False,
                 mandatory=False,
-                default=None
+                default=None,
             ).execute()
             if menuOption is not None:
                 menuOption()
-        self.barExit.CustomBars(mainmenuBars[1])
+        self.barExit.CustomBars(mainmenuBars(VERSION)[1])
         self.barExit.PrintLogos(creeperLogoSleep)
+
 
 class Tools:
     def __init__(self):
@@ -709,31 +742,47 @@ class Tools:
             "paper.jar": "Paper",
             "server.jar": "Vanilla",
             # "mohist.jar": "Mohist",
-            "imported.jar": selectImpServerText
+            "imported.jar": selectImpServerText,
         }
 
-        self.dw = DowloadManager() # Import dowload manager for ServerTypeSelect
+        self.dw = DowloadManager()  # Import dowload manager for ServerTypeSelect
         self.tx = TextFormatting()
         self.txE = TextFormatting(colorCode=160)
-        self.SelectionTERMC = partial(inquirer.select, style=TerMCStyle, border=True, mandatory_message=MandatoryMessage)
-        self.FuzzyTERMC = partial(inquirer.fuzzy, style=TerMCStyle, border=True, mandatory_message=MandatoryMessage)
-        self.FilePathTERMC = partial(inquirer.filepath, style=TerMCStyle, mandatory_message=MandatoryMessage)
-        self.TextTERMC = partial(inquirer.text, style=TerMCStyle, mandatory_message=MandatoryMessage)
-        self.ConfirmTERMC = partial(inquirer.confirm, style=TerMCStyle, mandatory_message=MandatoryMessage)
+        self.SelectionTERMC = partial(
+            inquirer.select,
+            style=TerMCStyle,
+            border=True,
+            mandatory_message=MandatoryMessage,
+        )
+        self.FuzzyTERMC = partial(
+            inquirer.fuzzy,
+            style=TerMCStyle,
+            border=True,
+            mandatory_message=MandatoryMessage,
+        )
+        self.FilePathTERMC = partial(
+            inquirer.filepath, style=TerMCStyle, mandatory_message=MandatoryMessage
+        )
+        self.TextTERMC = partial(
+            inquirer.text, style=TerMCStyle, mandatory_message=MandatoryMessage
+        )
+        self.ConfirmTERMC = partial(
+            inquirer.confirm, style=TerMCStyle, mandatory_message=MandatoryMessage
+        )
         try:
             self.EDITOR = shutil.which(os.environ["EDITOR"])
         except KeyError:
             self.EDITOR = shutil.which("nano")
 
-    def GetPathFileName(self, path=""): # Is basically the most used thing in my code
+    def GetPathFileName(self, path=""):  # Is basically the most used thing in my code
         return os.path.basename(os.path.normpath(path))
 
-    def SelectServer(self, title="", _colorCode=None): # This code is a shit, yes it is
+    def SelectServer(self, title="", _colorCode=None):  # This code is a shit, yes it is
         width, _ = os.get_terminal_size()
         serversNames = os.listdir(HOME)
         serversTypes = []
 
-        if serversNames != []: # Just don't waste compuer power
+        if serversNames != []:  # Just don't waste compuer power
             for files in serversNames:
                 fileNow = f"{HOME}{files}/"
                 serverFiles = os.listdir(fileNow)
@@ -770,31 +819,32 @@ class Tools:
         else:
             return (serverName, self.GetPathFileName(serverName))
 
+
 class Settings:
     def __init__(self):
         self.tx = TextFormatting(colorCode="7")
+        self.txE = TextFormatting(colorCode="160")
         self.parser = argparse.ArgumentParser(description=AppParameters[0])
-        self.parser.add_argument('-d', '--directory', type=str, help=AppParameters[1])
-        self.parser.add_argument('-c', '--command', type=str, help=AppParameters[2])
-        self.parser.add_argument('-i', '--ignore_config', type=bool, help=AppParameters[3])
+        self.parser.add_argument("-d", "--directory", type=str, help=AppParameters[1])
+        self.parser.add_argument("-c", "--command", type=str, help=AppParameters[2])
+        self.parser.add_argument(
+            "-i", "--ignore_config", type=bool, help=AppParameters[3]
+        )
 
-    def IfDir(self, directory=None):
-        if directory is None:
-            return
-        home = directory
-        if home.startswith("~/"):
-            home = home.replace("~/", f"{os.environ["HOME"]}/", 1)
-        if home.endswith("/") is False:
-            home = home + "/"
+    def IfDir(self, directory=""):
+        expandedPath = os.path.expanduser(directory)
+        home = os.path.abspath(expandedPath)
         if os.path.isdir(home):
-            self.tx.CenteredColorText(settingsDir(home))
-            return home
+            self.tx.CenteredColorText(
+                settingsDir(home.replace(os.environ["HOME"], "~"))
+            )
+            return (True, home)
 
-        return False
+        return (False, home)
 
     def ImportSettings(self):
         global HOME, SHELL
-        configFile = f"{os.environ["HOME"]}/.config/termc-config.json"
+        configFile = f"{os.environ['HOME']}/.config/termc-config.json"
         if os.path.isfile(configFile):
             with open(configFile, "r") as f:
                 file = load(f)
@@ -805,8 +855,8 @@ class Settings:
 
         if directory != "":
             dir = self.IfDir(directory)
-            if dir:
-                HOME = dir
+            if dir[0]:
+                HOME = dir[1]
         if command != "":
             SHELL = command
 
@@ -816,8 +866,8 @@ class Settings:
 
         if args.directory is not None:
             dir = self.IfDir(args.directory)
-            if dir:
-                HOME = dir
+            if dir[0]:
+                HOME = dir[1]
 
         if args.command is not None:
             global SHELL
@@ -833,6 +883,11 @@ class Settings:
         mn = MainMenu()
         mn.MainMenu()
 
+
 def main():
     se = Settings()
     se.Settings()
+
+
+if __name__ == "__main__":
+    main()
